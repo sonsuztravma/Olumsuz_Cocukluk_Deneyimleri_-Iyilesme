@@ -1,0 +1,1192 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Çocukluk Travmalarının Mirası: Toksik Stresten İyileşmeye</title>
+    
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <style>
+        @keyframes fade-in {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
+        }
+        @keyframes pulse-slow {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.8; transform: scale(1.05); }
+        }
+        @keyframes dash {
+            to { stroke-dashoffset: 0; }
+        }
+        .animate-fade-in { animation: fade-in 0.5s ease-out forwards; }
+        .animate-float { animation: float 3s ease-in-out infinite; }
+        .animate-pulse-slow { animation: pulse-slow 4s ease-in-out infinite; }
+        .animate-dash { animation: dash 1s ease-out forwards; }
+        
+        /* Kaydırma Çubuğu Gizleme */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="bg-slate-50 font-sans text-slate-800 selection:bg-teal-200 selection:text-teal-900">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useMemo } = React;
+
+        // --- ICON BİLEŞENLERİ ---
+        const Icon = ({ path, size = 24, className = "" }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>{path}</svg>
+        );
+
+        const Icons = {
+            Shield: (props) => <Icon {...props} path={<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />} />,
+            BookOpen: (props) => <Icon {...props} path={<><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></>} />,
+            Activity: (props) => <Icon {...props} path={<polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />} />,
+            Brain: (props) => <Icon {...props} path={<><path d="M12 5a3 3 0 1 0-5.997.125 4 4 0 0 0-2.526 5.77 4 4 0 0 0 .556 6.588A4 4 0 1 0 12 18Z"/><path d="M12 5a3 3 0 1 1 5.997.125 4 4 0 0 1 2.526 5.77 4 4 0 0 1-.556 6.588A4 4 0 1 1 12 18Z"/><path d="M15 13a4.5 4.5 0 0 1-3-4 4.5 4.5 0 0 1-3 4"/></>} />,
+            Heart: (props) => <Icon {...props} path={<path d="M19 14c1.49-1.28 3-4.364 3-7.23V6.27a7 7 0 0 0-14 0v.5c0 2.866 1.51 5.95 3 7.23L12 22l7-8z" />} />,
+            ArrowRight: (props) => <Icon {...props} path={<><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></>} />,
+            ArrowLeft: (props) => <Icon {...props} path={<><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></>} />,
+            Info: (props) => <Icon {...props} path={<><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></>} />,
+            RefreshCcw: (props) => <Icon {...props} path={<><path d="M1 4v6h6"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></>} />,
+            ChevronRight: (props) => <Icon {...props} path={<polyline points="9 18 15 12 9 6" />} />,
+            Moon: (props) => <Icon {...props} path={<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />} />,
+            Utensils: (props) => <Icon {...props} path={<><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2v0a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"/></>} />,
+            Wind: (props) => <Icon {...props} path={<><path d="M9.59 4.59A2 2 0 1 1 11 8H2m10.59 11.41A2 2 0 1 0 14 16H2m15.73-8.27A2.5 2.5 0 1 1 19.5 12H2"/></>} />,
+            Users: (props) => <Icon {...props} path={<><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></>} />,
+            CheckCircle: (props) => <Icon {...props} path={<><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></>} />,
+            Smile: (props) => <Icon {...props} path={<><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></>} />,
+            Map: (props) => <Icon {...props} path={<><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></>} />,
+            Plus: (props) => <Icon {...props} path={<><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></>} />,
+            Calendar: (props) => <Icon {...props} path={<><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></>} />,
+            MessageCircle: (props) => <Icon {...props} path={<path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>} />,
+            Phone: (props) => <Icon {...props} path={<path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>} />,
+            Trash: (props) => <Icon {...props} path={<><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></>} />,
+            Star: (props) => <Icon {...props} path={<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>} />,
+            Download: (props) => <Icon {...props} path={<><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></>} />,
+            Upload: (props) => <Icon {...props} path={<><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></>} />,
+            BarChart: (props) => <Icon {...props} path={<><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></>} />,
+            Book: (props) => <Icon {...props} path={<><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></>} />
+        };
+
+        // --- ETKİLEŞİMLİ GÖRSELLER BİLEŞENLERİ (İyileşme Yolları İçin) ---
+        const SleepVisual = ({ isDark, blueLightFilter }) => (
+            <svg viewBox="0 0 200 200" className="w-full h-64 transition-all duration-1000">
+                <defs>
+                    <linearGradient id="nightGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                        <stop offset="0%" stopColor={isDark ? "#0f172a" : "#87CEEB"} style={{transition: 'stop-color 1s'}} />
+                        <stop offset="100%" stopColor={isDark ? "#1e293b" : "#E0F7FA"} style={{transition: 'stop-color 1s'}} />
+                    </linearGradient>
+                </defs>
+                <rect width="200" height="200" fill="url(#nightGrad)" rx="10" />
+                <g className="transition-all duration-1000" transform={isDark ? "translate(0,0)" : "translate(0, 50)"}>
+                    <circle cx="100" cy={isDark ? "100" : "250"} r="40" fill="#F4F4F5" className="transition-all duration-1000" opacity={isDark ? 1 : 0} />
+                    <circle cx="120" cy={isDark ? "80" : "250"} r="35" fill="url(#nightGrad)" className="transition-all duration-1000" opacity={isDark ? 1 : 0} />
+                </g>
+                <g opacity={isDark ? 1 : 0} className="transition-opacity duration-1000">
+                    <circle cx="40" cy="40" r="1.5" fill="white" className="animate-pulse" />
+                    <circle cx="160" cy="30" r="2" fill="white" className="animate-pulse" style={{animationDelay: '0.5s'}} />
+                    <circle cx="140" cy="140" r="1" fill="white" className="animate-pulse" style={{animationDelay: '1s'}} />
+                    <circle cx="30" cy="160" r="1.5" fill="white" className="animate-pulse" style={{animationDelay: '1.5s'}} />
+                </g>
+                <path d="M60 160 Q100 120 140 160" stroke={isDark ? "#334155" : "#94a3b8"} strokeWidth="4" fill="none" strokeLinecap="round" />
+                {isDark && (
+                    <g className="text-white">
+                        <text x="100" y="140" fontSize="12" fill="white" className="animate-float" style={{animationDuration: '3s'}}>Z</text>
+                        <text x="115" y="130" fontSize="16" fill="white" className="animate-float" style={{animationDuration: '4s'}}>Z</text>
+                        <text x="135" y="115" fontSize="20" fill="white" className="animate-float" style={{animationDuration: '5s'}}>Z</text>
+                    </g>
+                )}
+                {!blueLightFilter && !isDark && <rect width="200" height="200" fill="blue" opacity="0.1" className="pointer-events-none" />}
+            </svg>
+        );
+
+        const NutritionVisual = ({ healthyCount }) => (
+            <svg viewBox="0 0 200 200" className="w-full h-64">
+                <circle cx="100" cy="100" r="80" fill="#f8fafc" stroke="#e2e8f0" strokeWidth="4" />
+                <circle cx="100" cy="100" r="60" fill="#f1f5f9" opacity="0.5" />
+                <g className="transition-all duration-500">
+                    <path d="M100 100 L100 40 A60 60 0 0 1 152 70 Z" fill={healthyCount > 0 ? "#4ade80" : "#cbd5e1"} className="transition-colors duration-500" />
+                    <path d="M100 100 L152 70 A60 60 0 0 1 152 130 Z" fill={healthyCount > 1 ? "#f87171" : "#cbd5e1"} className="transition-colors duration-500" />
+                    <path d="M100 100 L152 130 A60 60 0 0 1 100 160 Z" fill={healthyCount > 2 ? "#facc15" : "#cbd5e1"} className="transition-colors duration-500" />
+                    <path d="M100 100 L100 160 A60 60 0 0 1 48 130 Z" fill={healthyCount > 3 ? "#60a5fa" : "#cbd5e1"} className="transition-colors duration-500" />
+                </g>
+                <g transform="translate(88, 88) scale(1)">
+                    <Icons.Brain size={24} className={`text-slate-400 ${healthyCount === 4 ? 'text-teal-600 animate-pulse' : ''}`} />
+                </g>
+            </svg>
+        );
+
+        const ExerciseVisual = ({ activityLevel }) => (
+            <svg viewBox="0 0 200 200" className="w-full h-64">
+                <path d="M0 100 H40 L60 40 L80 160 L100 100 H200" fill="none" stroke="#e2e8f0" strokeWidth="2" />
+                <path d="M0 100 H40 L60 40 L80 160 L100 100 H200" fill="none" stroke={activityLevel > 0 ? "#ef4444" : "#cbd5e1"} strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" className={`${activityLevel > 0 ? 'animate-dash' : ''}`} strokeDasharray="300" strokeDashoffset={activityLevel > 0 ? "0" : "300"} style={{transition: 'stroke-dashoffset 1s ease-out'}} />
+                <circle cx="100" cy="100" r={20 + activityLevel * 5} fill="#ef4444" opacity="0.2" className="animate-pulse" />
+                <circle cx="100" cy="100" r="10" fill="#ef4444" className={`transition-transform duration-300 ${activityLevel > 0 ? 'animate-bounce' : ''}`} />
+            </svg>
+        );
+
+        // 5-4-3-2-1 TOPRAKLANMA (GROUNDING) BİLEŞENİ
+        const GroundingExercise = () => {
+            const [step, setStep] = useState(5);
+            const [inputs, setInputs] = useState({
+                5: ['', '', '', '', ''], 
+                4: ['', '', '', ''],     
+                3: ['', '', ''],         
+                2: ['', ''],             
+                1: ['']                  
+            });
+            const [completed, setCompleted] = useState(false);
+
+            const handleInputChange = (level, index, value) => {
+                const newInputs = { ...inputs };
+                newInputs[level][index] = value;
+                setInputs(newInputs);
+            };
+
+            const nextStep = () => {
+                if (step > 1) setStep(step - 1);
+                else setCompleted(true);
+            };
+
+            const reset = () => {
+                setStep(5);
+                setInputs({ 5: ['', '', '', '', ''], 4: ['', '', '', ''], 3: ['', '', ''], 2: ['', ''], 1: [''] });
+                setCompleted(false);
+            };
+
+            const stepInfo = {
+                5: { title: "5 Şey Gör", desc: "Etrafına bak ve şu an görebildiğin 5 şeyi yaz.", icon: "👁️", color: "bg-teal-100 text-teal-900" },
+                4: { title: "4 Şey Hisset", desc: "Şu an fiziksel olarak hissedebildiğin (dokunabildiğin) 4 şeyi yaz (örn: sandalyenin dokusu).", icon: "✋", color: "bg-indigo-100 text-indigo-900" },
+                3: { title: "3 Şey Duy", desc: "Şu an etrafında duyabildiğin 3 sesi yaz.", icon: "👂", color: "bg-blue-100 text-blue-900" },
+                2: { title: "2 Şey Kokla", desc: "Havadaki veya etrafındaki 2 kokuyu fark et ve yaz.", icon: "👃", color: "bg-green-100 text-green-900" },
+                1: { title: "1 Şey Tat", desc: "Ağzındaki tadı fark et veya sevdiğin 1 tadı düşünerek yaz.", icon: "👅", color: "bg-rose-100 text-rose-900" }
+            };
+
+            return (
+                <div className="bg-white p-6 sm:p-8 rounded-2xl shadow-lg border border-teal-100 animate-fade-in mt-8 w-full max-w-2xl mx-auto">
+                    <h4 className="text-2xl font-bold text-teal-900 mb-2">5-4-3-2-1 Topraklanma (Grounding) Egzersizi</h4>
+                    <p className="text-gray-600 mb-6">Zihniniz stres veya kaygıyla geçmişte/gelecekte kaybolduğunda, sizi "şu ana" ve bedeninize geri getiren güçlü bir farkındalık tekniğidir.</p>
+                    
+                    {!completed ? (
+                        <div className="space-y-6">
+                            <div className={`p-5 rounded-xl ${stepInfo[step].color} transition-all duration-500`}>
+                                <h5 className="text-xl font-bold mb-2 flex items-center">
+                                    <span className="text-3xl mr-3">{stepInfo[step].icon}</span>
+                                    {stepInfo[step].title}
+                                </h5>
+                                <p className="opacity-90">{stepInfo[step].desc}</p>
+                            </div>
+                            
+                            <div className="space-y-3">
+                                {inputs[step].map((val, idx) => (
+                                    <div key={idx} className="flex items-center animate-fade-in" style={{animationDelay: `${idx * 0.1}s`}}>
+                                        <div className="w-10 h-10 rounded-full bg-teal-100 text-teal-800 flex items-center justify-center font-bold mr-3 flex-shrink-0 border border-teal-200">{idx + 1}</div>
+                                        <input 
+                                            type="text" 
+                                            value={val}
+                                            onChange={(e) => handleInputChange(step, idx, e.target.value)}
+                                            placeholder="Buraya yazın..."
+                                            className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-500 outline-none transition-all shadow-sm"
+                                        />
+                                    </div>
+                                ))}
+                            </div>
+                            
+                            <button onClick={nextStep} className="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-4 rounded-lg mt-4 transition-colors shadow-md">
+                                {step > 1 ? "Sonraki Adım" : "Tamamla ve Listemi Gör"}
+                            </button>
+                        </div>
+                    ) : (
+                        <div className="p-6 bg-teal-50 rounded-xl border border-teal-200 animate-fade-in">
+                            <h5 className="text-2xl font-bold text-teal-900 mb-4 text-center">Harika İş Çıkardınız! ✨</h5>
+                            <p className="text-teal-800 mb-6 text-center">Şu an buradasınız ve güvendesiniz. İşte dikkatinizi ana getiren gözlemleriniz:</p>
+                            
+                            <div className="space-y-4 text-left bg-white p-6 rounded-lg shadow-inner">
+                                {[5,4,3,2,1].map(lvl => (
+                                    <div key={lvl} className="border-b last:border-0 pb-3 last:pb-0">
+                                        <strong className="text-teal-700 flex items-center mb-2">
+                                            <span className="mr-2">{stepInfo[lvl].icon}</span>
+                                            {stepInfo[lvl].title.split(' ')[1]} {stepInfo[lvl].title.split(' ')[2]}:
+                                        </strong>
+                                        <ul className="list-disc pl-8 text-gray-700 space-y-1">
+                                            {inputs[lvl].filter(Boolean).map((item, i) => <li key={i}>{item}</li>)}
+                                            {inputs[lvl].filter(Boolean).length === 0 && <li className="italic text-gray-400 list-none -ml-4">Belirtilmedi</li>}
+                                        </ul>
+                                    </div>
+                                ))}
+                            </div>
+                            
+                            <button onClick={reset} className="mt-6 flex items-center justify-center w-full py-4 border-2 border-teal-600 text-teal-700 font-bold rounded-lg hover:bg-teal-100 transition-colors">
+                                <Icons.RefreshCcw size={18} className="mr-2"/> Egzersizi Tekrarla
+                            </button>
+                        </div>
+                    )}
+                </div>
+            );
+        };
+
+        // --- ÇİZGİ GRAFİK BİLEŞENİ ---
+        const LineChart = ({ data, dataKey, color = "teal", label }) => {
+            if (!data || data.length === 0) return <div className="text-center text-gray-400 p-4">Veri yok</div>;
+
+            const values = data.map(d => d[dataKey] || 0);
+            const maxVal = Math.max(...values, 5); 
+            
+            const points = values.map((val, idx) => {
+                const x = 5 + (idx / (values.length - 1 || 1)) * 90; 
+                const y = 90 - ((val / maxVal) * 80); 
+                return `${x},${y}`;
+            }).join(' ');
+
+            return (
+                <div className="w-full h-32 relative mt-4 mb-8">
+                    <h4 className="text-xs font-bold text-gray-500 uppercase mb-2">{label} (Son {values.length} Gün)</h4>
+                    <svg viewBox="0 0 100 100" className="w-full h-full overflow-hidden bg-slate-50/50 rounded" preserveAspectRatio="none">
+                        <line x1="0" y1="10" x2="100" y2="10" stroke="#eee" strokeWidth="0.5" />
+                        <line x1="0" y1="50" x2="100" y2="50" stroke="#eee" strokeWidth="0.5" />
+                        <line x1="0" y1="90" x2="100" y2="90" stroke="#eee" strokeWidth="0.5" />
+                        <polyline fill="none" stroke={color} strokeWidth="2" points={points} vectorEffect="non-scaling-stroke" />
+                        {values.map((val, idx) => {
+                            const x = 5 + (idx / (values.length - 1 || 1)) * 90;
+                            const y = 90 - ((val / maxVal) * 80);
+                            return (
+                                <circle key={idx} cx={x} cy={y} r="2.5" fill={color} className="hover:r-4 transition-all cursor-pointer">
+                                    <title>{val}</title>
+                                </circle>
+                            );
+                        })}
+                    </svg>
+                    <div className="flex justify-between text-xs text-gray-400 mt-2">
+                        <span>{data[0]?.date.slice(5)}</span>
+                        <span>{data[data.length-1]?.date.slice(5)}</span>
+                    </div>
+                </div>
+            );
+        };
+
+        // --- NAVIGATION ---
+        const Navigation = ({ activeTab, setActiveTab }) => {
+            const tabs = [
+                { id: 'home', label: 'Giriş', icon: <Icons.BookOpen size={20} /> },
+                { id: 'ace-test', label: 'ACE Testi', icon: <Icons.Activity size={20} /> },
+                { id: 'science', label: 'Bilim', icon: <Icons.Brain size={20} /> },
+                { id: 'healing', label: 'İyileşme', icon: <Icons.Heart size={20} /> },
+                { id: 'journey', label: 'Yolculuğum', icon: <Icons.Map size={20} /> },
+                { id: 'reports', label: 'Özetler', icon: <Icons.BarChart size={20} /> },
+                { id: 'reading', label: 'Okuma Önerileri', icon: <Icons.Book size={20} /> },
+                { id: 'contact', label: 'İletişim', icon: <Icons.MessageCircle size={20} /> }
+            ];
+
+            return (
+                <nav className="bg-white shadow-md sticky top-0 z-50">
+                    <div className="max-w-7xl mx-auto px-4">
+                        <div className="flex justify-between items-center h-16">
+                            <div className="flex items-center space-x-2 font-bold text-xl text-teal-700 flex-shrink-0 mr-4">
+                                <Icons.Shield size={24} />
+                                <span className="hidden lg:inline">Toksik Stres & İyileşme</span>
+                            </div>
+                            <div className="flex space-x-1 overflow-x-auto no-scrollbar pb-1">
+                                {tabs.map((tab) => (
+                                    <button
+                                        key={tab.id}
+                                        onClick={() => setActiveTab(tab.id)}
+                                        className={`flex items-center space-x-1 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200 whitespace-nowrap ${
+                                            activeTab === tab.id ? 'bg-teal-100 text-teal-800' : 'text-gray-600 hover:bg-gray-100'
+                                        }`}
+                                    >
+                                        {tab.icon}
+                                        <span className="hidden sm:inline">{tab.label}</span>
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                </nav>
+            );
+        };
+        
+        // --- HOME SECTION ---
+        const HomeSection = ({ setActiveTab }) => (
+            <div className="flex flex-col items-center justify-center min-h-[80vh] text-center px-4 bg-gradient-to-b from-teal-50 to-white">
+                <div className="max-w-4xl pt-12 pb-8">
+                    <h1 className="text-4xl sm:text-5xl font-extrabold text-slate-800 mb-4 leading-tight">
+                        Çocukluk Travmalarının Mirası:<br/> <span className="text-teal-600">Toksik Stresten İyileşmeye</span>
+                    </h1>
+                    <h2 className="text-2xl sm:text-3xl font-semibold text-slate-700 mb-6">
+                        Çocuklukta Yaşadığın Stres Hâlâ Bedeninde mi?
+                    </h2>
+                    <p className="text-lg sm:text-xl text-slate-600 mb-10 leading-relaxed max-w-3xl mx-auto">
+                        Çocukluk döneminde yaşadığın olumsuz deneyimler, sadece anılarda değil; bedeninde, sinir sisteminde ve sağlık durumunda hâlâ sessizce etkisini sürdürüyor olabilir. Bu rehber, ACE (Olumsuz Çocukluk Deneyimleri) skorunu anlamandan başlayarak, toksik stresin biyolojik yükünü nasıl azaltabileceğini ve iyileşme yolculuğunu nasıl adım adım ilerletebileceğini gösteriyor.
+                    </p>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12 text-left">
+                        <button onClick={() => setActiveTab('ace-test')} className="bg-white p-6 rounded-xl shadow-sm border border-teal-100 hover:shadow-md transition-shadow text-left">
+                            <div className="w-12 h-12 bg-teal-100 rounded-full flex items-center justify-center text-teal-600 mb-4"><Icons.Activity size={24} /></div>
+                            <h3 className="font-bold text-lg mb-2">ACE Testi</h3>
+                            <p className="text-slate-500 text-sm">Olumsuz Çocukluk Deneyimleri skorunuzu hesaplayın ve risk faktörlerini anlayın.</p>
+                        </button>
+                        <button onClick={() => setActiveTab('science')} className="bg-white p-6 rounded-xl shadow-sm border border-teal-100 hover:shadow-md transition-shadow text-left">
+                            <div className="w-12 h-12 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-600 mb-4"><Icons.Brain size={24} /></div>
+                            <h3 className="font-bold text-lg mb-2">Bilim & Biyoloji</h3>
+                            <p className="text-slate-500 text-sm">Stresin biyolojisini, epigenetik aktarımı ve beden kayıtlarını öğrenin.</p>
+                        </button>
+                        <button onClick={() => setActiveTab('healing')} className="bg-white p-6 rounded-xl shadow-sm border border-teal-100 hover:shadow-md transition-shadow text-left">
+                            <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center text-orange-600 mb-4"><Icons.Heart size={24} /></div>
+                            <h3 className="font-bold text-lg mb-2">İyileşme Yolları</h3>
+                            <p className="text-slate-500 text-sm">Topraklanma egzersizleri, koruyucu faktörler ve iyileşme stratejilerini keşfedin.</p>
+                        </button>
+                    </div>
+                    <button onClick={() => setActiveTab('ace-test')} className="group bg-teal-600 hover:bg-teal-700 text-white text-lg font-semibold py-4 px-8 rounded-full transition-all duration-300 flex items-center mx-auto shadow-lg hover:shadow-xl transform hover:-translate-y-1">Keşfetmeye Başla <span className="ml-2 group-hover:translate-x-1 transition-transform"><Icons.ArrowRight size={20} /></span></button>
+                </div>
+            </div>
+        );
+        
+        // --- ACE TEST ---
+        const AceTestSection = ({ onGoToHealing }) => {
+            const [answers, setAnswers] = useState({});
+            const [showResult, setShowResult] = useState(false);
+            const questions = [
+                { id: 1, text: "Ebeveyniniz veya evdeki bir yetişkin size sık sık küfür etti mi, hakaret etti mi veya sizi aşağıladı mı?" },
+                { id: 2, text: "Ebeveyniniz veya evdeki bir yetişkin sizi itti, tokatladı veya üzerinize bir şey fırlattı mı?" },
+                { id: 3, text: "Bir yetişkin veya sizden en az 5 yaş büyük biri size cinsel dokunuşlarda bulundu mu?" },
+                { id: 4, text: "Ailenizde kimsenin sizi sevmediğini veya sizin önemli olmadığınızı hissettiniz mi?" },
+                { id: 5, text: "Yeterince yiyeceğiniz, temiz kıyafetiniz olmadığı veya sizi koruyacak kimsenin olmadığı durumlar sık yaşandı mı?" },
+                { id: 6, text: "Anne ve babanız ayrıldı mı veya boşandı mı?" },
+                { id: 7, text: "Anneniz veya üvey anneniz şiddet gördü mü (itildi, tokatlandı, vuruldu)?" },
+                { id: 8, text: "Evde alkolik veya uyuşturucu sorunu olan biriyle yaşadınız mı?" },
+                { id: 9, text: "Ev halkından biri depresyonda mıydı, akıl hastası mıydı veya intihara teşebbüs etti mi?" },
+                { id: 10, text: "Ev halkından biri hapse girdi mi?" }
+            ];
+            const handleToggle = (id) => setAnswers(prev => ({ ...prev, [id]: !prev[id] }));
+            const score = Object.values(answers).filter(Boolean).length;
+
+            let scoreExplanation = "";
+            let explanationColor = "";
+            if(score === 0) {
+                scoreExplanation = "Harika! Girdiğiniz cevaplara göre toksik stres yükünüz oldukça düşük görünüyor.";
+                explanationColor = "text-green-700 bg-green-50 border-green-200";
+            } else if(score >= 1 && score <= 3) {
+                scoreExplanation = "Skorunuz çocukluk döneminde bazı zorlayıcı deneyimler yaşadığınızı gösteriyor. Orta seviye bir risk taşıyor olabilirsiniz. Bedeninizdeki stres yükünü dengelemek için iyileşme yollarını rutininize eklemeniz faydalı olacaktır.";
+                explanationColor = "text-yellow-800 bg-yellow-50 border-yellow-200";
+            } else {
+                scoreExplanation = "Skorunuz toksik stres açısından yüksek risk grubunda olduğunuzu gösteriyor. Yaşadığınız bu erken dönem stresörleri yetişkinlikteki fiziksel ve ruhsal sağlığınızı etkiliyor olabilir. Vücudunuzdaki inflamasyonu azaltmak için iyileşme yollarını uygulamanız ve güvendiğiniz bir uzmandan destek almanız çok önemlidir.";
+                explanationColor = "text-red-800 bg-red-50 border-red-200";
+            }
+
+            return (
+                <div className="max-w-4xl mx-auto py-10 px-4">
+                    <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
+                        <div className="bg-teal-600 p-8 text-white">
+                            <h2 className="text-3xl font-bold mb-2">ACE Testi (Olumsuz Çocukluk Deneyimleri)</h2>
+                            <p className="opacity-90">Verdiğiniz cevaplar dışarı aktarılmaz, sadece cihazınızda değerlendirilir.</p>
+                        </div>
+                        {!showResult ? (
+                            <div className="p-8">
+                                <div className="space-y-4">
+                                    {questions.map((q) => (
+                                        <label key={q.id} className="flex items-start p-4 border border-gray-200 rounded-lg hover:bg-teal-50 cursor-pointer transition-colors">
+                                            <div className="flex items-center h-6"><input type="checkbox" checked={!!answers[q.id]} onChange={() => handleToggle(q.id)} className="w-5 h-5 text-teal-600 border-gray-300 rounded focus:ring-teal-500"/></div>
+                                            <span className="ml-3 text-gray-700 font-medium">{q.text}</span>
+                                        </label>
+                                    ))}
+                                </div>
+                                <div className="mt-8 flex justify-end"><button onClick={() => setShowResult(true)} className="bg-teal-600 hover:bg-teal-700 text-white font-bold py-3 px-8 rounded-lg shadow-md transition-all">Skorumu Hesapla</button></div>
+                            </div>
+                        ) : (
+                            <div className="p-8 text-center">
+                                <div className="inline-block p-10 rounded-full bg-teal-50 border-4 border-teal-100 mb-4"><span className="text-6xl font-extrabold text-teal-600">{score}</span><span className="text-xl text-teal-400 block">/ 10</span></div>
+                                <h3 className="text-2xl font-bold mb-4">ACE Skorunuz</h3>
+                                
+                                <div className={`p-6 rounded-lg border text-left mb-8 max-w-2xl mx-auto ${explanationColor}`}>
+                                    <p className="font-medium">{scoreExplanation}</p>
+                                </div>
+
+                                <div className="flex flex-col sm:flex-row justify-center gap-4">
+                                    <button onClick={() => { setShowResult(false); setAnswers({}); }} className="px-6 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 flex items-center justify-center gap-2 font-medium text-gray-700"><Icons.RefreshCcw size={18}/> Testi Tekrarla</button>
+                                    <button onClick={onGoToHealing} className="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg flex items-center justify-center gap-2 font-bold shadow-md transition-colors"><Icons.Heart size={18}/> İyileşme Yollarını Gör</button>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            );
+        };
+
+        // --- SCIENCE SECTION ---
+        const ScienceSection = () => {
+            const [activeConcept, setActiveConcept] = useState('bear');
+
+            return (
+                <div className="max-w-6xl mx-auto py-10 px-4">
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                        <div className="lg:col-span-4 space-y-4">
+                            <div className="bg-white rounded-xl shadow-md p-6 border border-gray-100">
+                                <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center">
+                                    <span className="mr-2 text-teal-600"><Icons.Brain size={24} /></span>
+                                    Biyolojik Mekanizma
+                                </h3>
+                                <div className="space-y-2">
+                                    <button onClick={() => setActiveConcept('bear')} className={`w-full text-left p-3 rounded-lg transition-all ${activeConcept === 'bear' ? 'bg-teal-100 text-teal-800 font-medium' : 'hover:bg-gray-50 text-gray-600'}`}>1. Ormandaki Ayı (Akut Stres)</button>
+                                    <button onClick={() => setActiveConcept('toxic')} className={`w-full text-left p-3 rounded-lg transition-all ${activeConcept === 'toxic' ? 'bg-teal-100 text-teal-800 font-medium' : 'hover:bg-gray-50 text-gray-600'}`}>2. Evdeki Ayı (Toksik Stres)</button>
+                                    <button onClick={() => setActiveConcept('body')} className={`w-full text-left p-3 rounded-lg transition-all ${activeConcept === 'body' ? 'bg-teal-100 text-teal-800 font-medium' : 'hover:bg-gray-50 text-gray-600'}`}>3. Vücuda Etkileri</button>
+                                    <button onClick={() => setActiveConcept('epigenetics')} className={`w-full text-left p-3 rounded-lg transition-all ${activeConcept === 'epigenetics' ? 'bg-blue-100 text-blue-800 font-medium' : 'hover:bg-gray-50 text-gray-600'}`}>4. Epigenetik ve Miras</button>
+                                    <button onClick={() => setActiveConcept('resilience')} className={`w-full text-left p-3 rounded-lg transition-all ${activeConcept === 'resilience' ? 'bg-green-100 text-green-800 font-medium' : 'hover:bg-gray-50 text-gray-600'}`}>5. Dayanıklılık (Resilience)</button>
+                                    <button onClick={() => setActiveConcept('ptg')} className={`w-full text-left p-3 rounded-lg transition-all ${activeConcept === 'ptg' ? 'bg-rose-100 text-rose-800 font-medium' : 'hover:bg-gray-50 text-gray-600'}`}>6. Travma Sonrası Büyüme</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="lg:col-span-8">
+                            <div className="bg-white rounded-xl shadow-lg overflow-hidden min-h-[500px]">
+                                {activeConcept === 'bear' && (
+                                    <div className="p-8 animate-fade-in">
+                                        <div className="bg-amber-100 text-amber-800 px-4 py-2 rounded-full inline-block text-sm font-bold mb-4">Normal Stres Tepkisi</div>
+                                        <h2 className="text-3xl font-bold text-gray-800 mb-6">Ormanda Bir Ayı Gördünüz!</h2>
+                                        <div className="flex flex-col md:flex-row gap-8 items-center mb-8">
+                                            <div className="w-full md:w-1/2 bg-gray-100 rounded-xl p-6 relative h-64 flex items-center justify-center">
+                                                <div className="text-6xl">🐻</div>
+                                                <div className="text-red-500 mx-4"><Icons.ArrowRight size={32} /></div>
+                                                <div className="text-6xl">😱</div>
+                                            </div>
+                                            <div className="w-full md:w-1/2 space-y-4">
+                                                <div className="flex items-center"><div className="w-8 h-8 rounded-full bg-red-100 text-red-600 flex items-center justify-center font-bold mr-3">1</div><p className="text-gray-700"><strong>Amigdala</strong> (Alarm Merkezi) tehlikeyi algılar.</p></div>
+                                                <div className="flex items-center"><div className="w-8 h-8 rounded-full bg-red-100 text-red-600 flex items-center justify-center font-bold mr-3">2</div><p className="text-gray-700">Adrenalin ve Kortizol pompalanır.</p></div>
+                                                <div className="flex items-center"><div className="w-8 h-8 rounded-full bg-red-100 text-red-600 flex items-center justify-center font-bold mr-3">3</div><p className="text-gray-700">Kalp atışı hızlanır, göz bebekleri büyür.</p></div>
+                                                <div className="flex items-center"><div className="w-8 h-8 rounded-full bg-red-100 text-red-600 flex items-center justify-center font-bold mr-3">4</div><p className="text-gray-700"><strong>Prefrontal Korteks</strong> (Mantık Merkezi) devre dışı kalır.</p></div>
+                                            </div>
+                                        </div>
+                                        <p className="text-lg text-gray-600 border-t pt-4">Bu tepki hayat kurtarıcıdır. Ayıdan kaçmanızı veya onunla savaşmanızı sağlar. Tehlike geçince sistem normale döner.</p>
+                                    </div>
+                                )}
+
+                                {activeConcept === 'toxic' && (
+                                    <div className="p-8 animate-fade-in">
+                                        <div className="bg-purple-100 text-purple-800 px-4 py-2 rounded-full inline-block text-sm font-bold mb-4">Toksik Stres</div>
+                                        <h2 className="text-3xl font-bold text-gray-800 mb-6">Ayı Evinizin İçinde Yaşarsa?</h2>
+                                        <div className="bg-purple-50 p-6 rounded-xl border border-purple-100 mb-6">
+                                            <p className="text-lg text-purple-900 leading-relaxed">Eğer tehlike (şiddet, ihmal, açlık) sürekli ve öngörülemez ise, stres sistemi <strong>asla kapanmaz</strong>. Çocuklar sürekli "kırmızı alarm" durumunda yaşar.</p>
+                                        </div>
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                                            <div className="border p-4 rounded-lg"><h4 className="font-bold text-red-600 mb-2">Aşırı Aktif Amigdala</h4><p className="text-sm text-gray-600">Tehlike dedektörü bozulur. En ufak bir uyaran (bir öğretmenin çatık kaşı) bile hayati tehlike gibi algılanır.</p></div>
+                                            <div className="border p-4 rounded-lg"><h4 className="font-bold text-blue-600 mb-2">Zayıf Prefrontal Korteks</h4><p className="text-sm text-gray-600">Dürtü kontrolü, öğrenme ve planlama merkezi yeterince gelişemez. Odaklanma sorunları yaşanır.</p></div>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {activeConcept === 'body' && (
+                                    <div className="p-8 animate-fade-in">
+                                        <div className="bg-green-100 text-green-800 px-4 py-2 rounded-full inline-block text-sm font-bold mb-4">Uzun Vadeli Etkiler</div>
+                                        <h2 className="text-3xl font-bold text-gray-800 mb-6">Beden Skoru Tutar</h2>
+                                        <div className="space-y-6">
+                                            <p className="text-gray-600 text-lg">Sürekli yüksek kortizol ve adrenalin seviyeleri sadece beyni değil, tüm vücudu yıpratır. Dr. Burke Harris buna "Toksik Stres" adını verir.</p>
+                                            <ul className="space-y-4 mt-6">
+                                                <li className="flex items-start bg-gray-50 p-4 rounded-lg"><div className="bg-red-100 p-2 rounded-full mr-4 text-red-600"><Icons.Activity size={20}/></div><div><span className="font-bold text-gray-800 block text-lg">Bağışıklık Sistemi</span><span className="text-gray-600">Aşırı inflamasyon (iltihaplanma). Otoimmün hastalık riskinde artış.</span></div></li>
+                                                <li className="flex items-start bg-gray-50 p-4 rounded-lg"><div className="bg-red-100 p-2 rounded-full mr-4 text-red-600"><Icons.Heart size={20}/></div><div><span className="font-bold text-gray-800 block text-lg">Kalp ve Damar</span><span className="text-gray-600">Yüksek tansiyon, kalp hastalığı riski.</span></div></li>
+                                                <li className="flex items-start bg-gray-50 p-4 rounded-lg"><div className="bg-red-100 p-2 rounded-full mr-4 text-red-600"><Icons.Brain size={20}/></div><div><span className="font-bold text-gray-800 block text-lg">Hormonal Sistem</span><span className="text-gray-600">Büyüme ve metabolizma sorunları. Obezite riskinde artış.</span></div></li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {activeConcept === 'epigenetics' && (
+                                    <div className="p-8 animate-fade-in">
+                                        <div className="bg-blue-100 text-blue-800 px-4 py-2 rounded-full inline-block text-sm font-bold mb-4">Nesiller Arası Aktarım</div>
+                                        <h2 className="text-3xl font-bold text-gray-800 mb-6">Epigenetik: DNA'nın İşleyişi Değişir</h2>
+                                        <div className="flex justify-center mb-6"><div className="w-24 h-24 border-4 border-blue-400 rounded-full flex items-center justify-center animate-spin-slow"><span className="text-4xl">🧬</span></div></div>
+                                        <div className="bg-blue-50 p-6 rounded-xl border border-blue-100 mb-6 text-lg text-blue-900 leading-relaxed shadow-inner">
+                                            Toksik stres, genetik kodumuzu (DNA dizilimini) değiştirmez, ancak <strong>hangi genlerin okunup hangilerinin kapatılacağını</strong> (DNA ifadesini) değiştirebilir. Buna epigenetik denir.
+                                        </div>
+                                        
+                                        <div className="bg-green-50 border-l-4 border-green-500 p-6 rounded-r-xl mt-6 shadow-sm">
+                                            <h4 className="font-bold text-green-800 text-xl mb-2">İyi Haber!</h4>
+                                            <p className="text-green-900 text-lg">
+                                                İyileşme pratikleri de epigenetik olarak <strong>olumlu etki yaratabilir</strong>. Düzenli uyku, farkındalık, egzersiz ve güvenli bağlar, stres yanıtımızı hücresel düzeyde onararak gelecek nesillere daha sağlıklı bir miras bırakmamızı sağlar.
+                                            </p>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {activeConcept === 'resilience' && (
+                                    <div className="p-8 animate-fade-in">
+                                        <div className="bg-green-100 text-green-800 px-4 py-2 rounded-full inline-block text-sm font-bold mb-4">Koruyucu Faktörler</div>
+                                        <h2 className="text-3xl font-bold text-gray-800 mb-6">Dayanıklılık (Resilience)</h2>
+                                        
+                                        <div className="text-center mb-8">
+                                            <p className="text-green-900 text-xl md:text-2xl leading-relaxed font-extrabold bg-green-50 p-6 rounded-xl shadow-sm inline-block border border-green-200">
+                                                "Sadece 1-2 güvenli yetişkin ilişkisi bile toksik stresin riskini dramatik ölçüde azaltır."
+                                            </p>
+                                        </div>
+
+                                        <p className="text-gray-600 text-lg">
+                                            Dayanıklılık doğuştan gelen sabit bir özellik değil, sonradan inşa edilebilen bir kas gibidir. İyi beslenme, uyku, egzersiz ve farkındalık çalışmaları beyin plastisitesini kullanarak sinir sistemini yeniden yapılandırmanızı sağlar.
+                                        </p>
+                                    </div>
+                                )}
+
+                                {activeConcept === 'ptg' && (
+                                    <div className="p-8 animate-fade-in">
+                                        <div className="bg-rose-100 text-rose-800 px-4 py-2 rounded-full inline-block text-sm font-bold mb-4">Umut ve Dönüşüm</div>
+                                        <h2 className="text-3xl font-bold text-gray-800 mb-6">Travma Sonrası Büyüme (PTG)</h2>
+                                        <p className="text-gray-600 text-lg leading-relaxed mb-8">
+                                            Travma sadece bir yıkım getirmez. Bazı bireyler, yaşadıkları bu derin zorlukların ardından psikolojik bir sıçrama yaşarlar. Buna <strong>Travma Sonrası Büyüme</strong> denir.
+                                        </p>
+                                        <ul className="space-y-4 mt-4">
+                                            <li className="flex items-start bg-white p-4 rounded-xl border border-gray-100 shadow-sm"><div className="bg-rose-100 p-3 rounded-full mr-4 text-rose-600"><Icons.Heart size={24}/></div><div><span className="font-bold text-gray-800 text-lg block">Daha Güçlü İlişkiler</span><span className="text-gray-600">Başkalarıyla daha anlamlı, gerçek ve derin bağlar kurma yeteneği.</span></div></li>
+                                            <li className="flex items-start bg-white p-4 rounded-xl border border-gray-100 shadow-sm"><div className="bg-rose-100 p-3 rounded-full mr-4 text-rose-600"><Icons.Users size={24}/></div><div><span className="font-bold text-gray-800 text-lg block">Derin Empati</span><span className="text-gray-600">Başkalarının acılarına karşı daha yüksek bir hassasiyet, anlayış ve şefkat geliştirme.</span></div></li>
+                                            <li className="flex items-start bg-white p-4 rounded-xl border border-gray-100 shadow-sm"><div className="bg-rose-100 p-3 rounded-full mr-4 text-rose-600"><Icons.Map size={24}/></div><div><span className="font-bold text-gray-800 text-lg block">Yeni Bir Yaşam Amacı</span><span className="text-gray-600">Hayatın anlamına dair yeni bir farkındalık ve başkalarına yardım etme arzusu.</span></div></li>
+                                        </ul>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        // --- HEALING SECTION ---
+        const HealingMenu = ({ onViewDetail }) => {
+            const strategies = [
+                { id: 'sleep', title: 'Uyku', icon: <Icons.Moon size={24} />, color: 'bg-indigo-500', desc: "Beyni temizler ve onarır." },
+                { id: 'exercise', title: 'Egzersiz', icon: <Icons.Activity size={24} />, color: 'bg-red-500', desc: "Stres hormonlarını yakar." },
+                { id: 'nutrition', title: 'Beslenme', icon: <Icons.Utensils size={24} />, color: 'bg-green-500', desc: "İnflamasyonu azaltır." },
+                { id: 'mindfulness', title: 'Farkındalık', icon: <Icons.Wind size={24} />, color: 'bg-teal-500', desc: "Topraklanma ve nefes çalışmaları." },
+                { id: 'mental', title: 'Ruh Sağlığı', icon: <Icons.Brain size={24} />, color: 'bg-purple-500', desc: "Duygusal farkındalık ve öz-şefkat." },
+                { id: 'relationships', title: 'İlişkiler', icon: <Icons.Users size={24} />, color: 'bg-orange-500', desc: "Bağ kurmak iyileştirir." }
+            ];
+
+            return (
+                <div className="max-w-6xl mx-auto py-10 px-4 animate-fade-in">
+                    <div className="text-center mb-12">
+                        <h2 className="text-3xl font-bold text-gray-800 mb-4">İyileşme Reçetesi</h2>
+                        <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+                            Bu 6 alanda yapacağınız küçük değişiklikler biyolojinizi değiştirebilir. Detaylı bilgi ve interaktif araçlar için bir başlık seçin.
+                        </p>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {strategies.map((item) => (
+                            <button key={item.id} onClick={() => onViewDetail(item)} className="group bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 border border-gray-100 text-left overflow-hidden transform hover:-translate-y-1">
+                                <div className={`${item.color} p-4 text-white flex items-center justify-between`}><h3 className="font-bold text-lg">{item.title}</h3><div className="bg-white/20 p-2 rounded-lg group-hover:bg-white/30 transition-colors">{item.icon}</div></div>
+                                <div className="p-6"><p className="text-gray-700 mb-4">{item.desc}</p><div className="flex items-center text-teal-600 font-medium text-sm">Detayları Gör <Icons.ArrowRight size={16} className="ml-2 group-hover:translate-x-1 transition-transform" /></div></div>
+                            </button>
+                        ))}
+                    </div>
+                </div>
+            );
+        };
+
+        const HealingDetail = ({ strategy, onBack }) => {
+            // Uyku ve Beslenme State'leri
+            const [sleepState, setSleepState] = useState({ dark: false, cool: false, quiet: false });
+            const [foodScore, setFoodScore] = useState(0);
+            const [activityLevel, setActivityLevel] = useState(0);
+            const toggleSleep = (key) => setSleepState(prev => ({ ...prev, [key]: !prev[key] }));
+            const toggleFood = (val) => setFoodScore(prev => val ? Math.min(4, prev + 1) : Math.max(0, prev - 1));
+            
+            // Ruh Sağlığı State'leri
+            const [selectedEmotion, setSelectedEmotion] = useState('');
+            const [compassionText, setCompassionText] = useState('');
+            const [mentalSaved, setMentalSaved] = useState(false);
+            const emotions = [
+                { name: 'Sakin', icon: '😌' }, { name: 'Kaygılı', icon: '😟' }, 
+                { name: 'Hüzünlü', icon: '😢' }, { name: 'Öfkeli', icon: '😠' }, 
+                { name: 'Neşeli', icon: '😊' }, { name: 'Yorgun', icon: '😮‍💨' }
+            ];
+
+            // İlişkiler State'leri
+            const [connectionPerson, setConnectionPerson] = useState('');
+            const [connectionType, setConnectionType] = useState('');
+            const [relSaved, setRelSaved] = useState(false);
+            const connectionTypes = ['Yüz yüze sohbet ettik', 'Telefonla/Mesajla ulaştım', 'Birlikte zaman geçirdik', 'Destek istedim / destek oldum'];
+
+            return (
+                <div className="min-h-screen bg-white animate-fade-in pb-16">
+                    <div className={`py-8 px-4 ${strategy.color} text-white relative overflow-hidden`}>
+                        <div className="max-w-4xl mx-auto flex items-center relative z-10">
+                            <button onClick={onBack} className="mr-4 hover:bg-white/20 p-2 rounded-full transition-colors"><Icons.ArrowLeft size={28} /></button>
+                            <div><h2 className="text-3xl font-bold flex items-center">{strategy.icon}<span className="ml-3">{strategy.title}</span></h2><p className="mt-2 opacity-90">{strategy.desc}</p></div>
+                        </div>
+                        <div className="absolute top-0 right-0 opacity-10 transform translate-x-10 -translate-y-10">{strategy.icon}</div>
+                    </div>
+
+                    <div className="max-w-4xl mx-auto px-4 py-8">
+                        {strategy.id === 'sleep' && (
+                            <div className="grid md:grid-cols-2 gap-8 items-center">
+                                <div className="order-2 md:order-1 space-y-6">
+                                    <h3 className="text-xl font-bold text-indigo-900">İdeal Uyku Ortamını Yarat</h3>
+                                    <p className="text-gray-600">Toksik stres, uyku düzenini bozar. Biyolojik saati (sirkadiyen ritim) onarmak için ortamı düzenleyin.</p>
+                                    <div className="space-y-3">
+                                        <button onClick={() => toggleSleep('dark')} className={`w-full p-4 rounded-xl flex items-center justify-between transition-all ${sleepState.dark ? 'bg-indigo-600 text-white shadow-lg' : 'bg-gray-100 text-gray-600'}`}>
+                                            <span className="flex items-center"><Icons.Moon size={20} className="mr-3"/> Karanlık Oda (Melatonin)</span>{sleepState.dark && <Icons.CheckCircle size={20}/>}
+                                        </button>
+                                        <button onClick={() => toggleSleep('quiet')} className={`w-full p-4 rounded-xl flex items-center justify-between transition-all ${sleepState.quiet ? 'bg-indigo-500 text-white shadow-lg' : 'bg-gray-100 text-gray-600'}`}>
+                                            <span className="flex items-center"><Icons.Wind size={20} className="mr-3"/> Sessizlik / Beyaz Gürültü</span>{sleepState.quiet && <Icons.CheckCircle size={20}/>}
+                                        </button>
+                                        <button onClick={() => toggleSleep('cool')} className={`w-full p-4 rounded-xl flex items-center justify-between transition-all ${sleepState.cool ? 'bg-indigo-400 text-white shadow-lg' : 'bg-gray-100 text-gray-600'}`}>
+                                            <span className="flex items-center"><Icons.Activity size={20} className="mr-3"/> Serin Ortam (18-21°C)</span>{sleepState.cool && <Icons.CheckCircle size={20}/>}
+                                        </button>
+                                    </div>
+                                </div>
+                                <div className="order-1 md:order-2 bg-slate-900 rounded-2xl p-6 shadow-2xl relative overflow-hidden">
+                                    <SleepVisual isDark={sleepState.dark} blueLightFilter={true} />
+                                    <p className="text-center text-slate-400 mt-4 text-sm font-mono">Simülasyon: Uyku Hijyeni</p>
+                                </div>
+                            </div>
+                        )}
+
+                        {strategy.id === 'exercise' && (
+                            <div className="space-y-8">
+                                <div className="bg-red-50 p-6 rounded-2xl border border-red-100">
+                                    <div className="flex justify-between items-center mb-6">
+                                        <h3 className="text-xl font-bold text-red-900">Stresi Yakın</h3>
+                                        <div className="bg-white px-4 py-2 rounded-full shadow-sm text-red-600 font-bold">Aktivite: {activityLevel * 25}%</div>
+                                    </div>
+                                    <div className="h-64 bg-white rounded-xl shadow-inner flex items-center justify-center relative overflow-hidden mb-6">
+                                        <ExerciseVisual activityLevel={activityLevel} />
+                                    </div>
+                                    <div className="flex gap-4 justify-center">
+                                        <button onClick={() => setActivityLevel(prev => Math.min(4, prev + 1))} className="bg-red-600 hover:bg-red-700 text-white px-8 py-4 rounded-full font-bold shadow-lg transform active:scale-95 transition-all flex items-center"><Icons.Activity className="mr-2 animate-pulse" />Hareket Et!</button>
+                                        <button onClick={() => setActivityLevel(0)} className="bg-gray-200 text-gray-600 px-6 py-4 rounded-full font-bold hover:bg-gray-300 transition-all">Dinlen</button>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {strategy.id === 'nutrition' && (
+                            <div className="grid md:grid-cols-2 gap-10">
+                                <div>
+                                    <h3 className="text-xl font-bold text-green-900 mb-4">Tabağını İyileştir</h3>
+                                    <p className="mb-6 text-gray-600">Sağlıklı seçimler yaparak beyninize giden inflamasyon sinyallerini azaltın.</p>
+                                    <div className="grid grid-cols-2 gap-3">
+                                        <button onClick={() => toggleFood(true)} className="p-3 bg-green-50 border border-green-200 rounded-lg hover:bg-green-100 text-left">🥦 <strong>Sebzeler</strong><br/><span className="text-xs text-gray-500">Lif ve Vitamin</span></button>
+                                        <button onClick={() => toggleFood(true)} className="p-3 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 text-left">🐟 <strong>Omega-3</strong><br/><span className="text-xs text-gray-500">Balık, Ceviz</span></button>
+                                        <button onClick={() => toggleFood(false)} className="p-3 bg-red-50 border border-red-200 rounded-lg hover:bg-red-100 text-left opacity-60">🍩 <strong>Şeker</strong><br/><span className="text-xs text-gray-500">İnflamasyon artırır</span></button>
+                                        <button onClick={() => toggleFood(true)} className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg hover:bg-yellow-100 text-left">💧 <strong>Su</strong><br/><span className="text-xs text-gray-500">Hidrasyon</span></button>
+                                    </div>
+                                </div>
+                                <div className="flex flex-col items-center justify-center bg-white p-6 rounded-2xl shadow-lg border border-gray-100">
+                                    <NutritionVisual healthyCount={foodScore} />
+                                    <div className="mt-4 text-center">
+                                        <div className="text-sm font-bold text-gray-500 uppercase tracking-wide">Beyin Sağlığı Skoru</div>
+                                        <div className="text-3xl font-extrabold text-green-600">{foodScore * 25}%</div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {strategy.id === 'mindfulness' && (
+                            <div className="text-center">
+                                <GroundingExercise />
+                            </div>
+                        )}
+
+                        {/* GÜNCELLENMİŞ: RUH SAĞLIĞI ARACI */}
+                        {strategy.id === 'mental' && (
+                            <div className="bg-purple-50 border border-purple-100 rounded-2xl p-6 sm:p-8 w-full max-w-2xl mx-auto">
+                                <h3 className="text-2xl font-bold text-purple-900 mb-2 text-center">Duygu Kontrolü & Öz-Şefkat</h3>
+                                <p className="text-purple-800 mb-8 text-center">Duyguyu isimlendirmek, amigdalanın alarm durumunu yatıştırır.</p>
+                                
+                                {!mentalSaved ? (
+                                    <div className="space-y-6">
+                                        <div>
+                                            <label className="block font-bold text-purple-900 mb-3">1. Şu an tam olarak ne hissediyorum?</label>
+                                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                                                {emotions.map((emo) => (
+                                                    <button 
+                                                        key={emo.name} 
+                                                        onClick={() => setSelectedEmotion(emo.name)}
+                                                        className={`p-3 rounded-xl border flex flex-col items-center transition-all ${selectedEmotion === emo.name ? 'bg-purple-600 text-white border-purple-600 shadow-md transform scale-105' : 'bg-white text-gray-600 border-gray-200 hover:bg-purple-100'}`}
+                                                    >
+                                                        <span className="text-2xl mb-1">{emo.icon}</span>
+                                                        <span className="text-sm font-medium">{emo.name}</span>
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </div>
+                                        
+                                        <div>
+                                            <label className="block font-bold text-purple-900 mb-3">2. Bugün kendime nasıl şefkat gösterdim?</label>
+                                            <textarea 
+                                                value={compassionText}
+                                                onChange={(e) => setCompassionText(e.target.value)}
+                                                placeholder="(Örn: Zor bir gün geçirdiğimi kabul ettim, kendime bir kahve molası verdim...)"
+                                                className="w-full p-4 rounded-xl border border-purple-200 focus:ring-2 focus:ring-purple-500 outline-none resize-none h-24"
+                                            ></textarea>
+                                        </div>
+                                        
+                                        <button 
+                                            onClick={() => { if(selectedEmotion) setMentalSaved(true); }}
+                                            className={`w-full py-4 rounded-xl font-bold shadow-md transition-colors ${selectedEmotion ? 'bg-purple-600 hover:bg-purple-700 text-white' : 'bg-purple-200 text-purple-400 cursor-not-allowed'}`}
+                                        >
+                                            Kendimle Bağ Kurdum
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <div className="bg-white p-6 rounded-xl border border-purple-200 text-center animate-fade-in">
+                                        <div className="text-4xl mb-4">🌱</div>
+                                        <h4 className="text-xl font-bold text-purple-900 mb-2">Kendinize zaman ayırdığınız için teşekkürler.</h4>
+                                        <p className="text-gray-600 mb-6">Şu an <strong>{selectedEmotion}</strong> hissediyorsunuz. Duygularınızı kabul etmek iyileşmenin ilk adımıdır. Şefkat notunuz cihazınıza kaydedildi.</p>
+                                        <button onClick={() => { setMentalSaved(false); setSelectedEmotion(''); setCompassionText(''); }} className="text-purple-600 font-medium underline">Yeni bir kayıt oluştur</button>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        {/* GÜNCELLENMİŞ: İLİŞKİLER ARACI */}
+                        {strategy.id === 'relationships' && (
+                            <div className="bg-orange-50 border border-orange-100 rounded-2xl p-6 sm:p-8 w-full max-w-2xl mx-auto">
+                                <h3 className="text-2xl font-bold text-orange-900 mb-2 text-center">Güvenli Bağlantı Ağı</h3>
+                                <p className="text-orange-800 mb-8 text-center">Toksik strese karşı en güçlü panzehir insan ilişkileridir.</p>
+                                
+                                {!relSaved ? (
+                                    <div className="space-y-6">
+                                        <div>
+                                            <label className="block font-bold text-orange-900 mb-3">1. Bugün kiminle bağ kurdum?</label>
+                                            <input 
+                                                type="text" 
+                                                value={connectionPerson}
+                                                onChange={(e) => setConnectionPerson(e.target.value)}
+                                                placeholder="(Örn: Arkadaşım Ayşe, Annem, Terapistim...)"
+                                                className="w-full p-4 rounded-xl border border-orange-200 focus:ring-2 focus:ring-orange-500 outline-none"
+                                            />
+                                        </div>
+                                        
+                                        <div>
+                                            <label className="block font-bold text-orange-900 mb-3">2. Bu bağı nasıl kurduk?</label>
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                                {connectionTypes.map((type) => (
+                                                    <button 
+                                                        key={type} 
+                                                        onClick={() => setConnectionType(type)}
+                                                        className={`p-3 rounded-xl border transition-all text-sm font-medium ${connectionType === type ? 'bg-orange-500 text-white border-orange-500 shadow-md' : 'bg-white text-gray-600 border-gray-200 hover:bg-orange-100'}`}
+                                                    >
+                                                        {type}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </div>
+                                        
+                                        <button 
+                                            onClick={() => { if(connectionPerson && connectionType) setRelSaved(true); }}
+                                            className={`w-full py-4 rounded-xl font-bold shadow-md transition-colors ${connectionPerson && connectionType ? 'bg-orange-500 hover:bg-orange-600 text-white' : 'bg-orange-200 text-orange-400 cursor-not-allowed'}`}
+                                        >
+                                            Bağlantıyı Kaydet
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <div className="bg-white p-6 rounded-xl border border-orange-200 text-center animate-fade-in">
+                                        <div className="text-4xl mb-4">🤝</div>
+                                        <h4 className="text-xl font-bold text-orange-900 mb-2">Bağlantınız koruma kalkanınızı güçlendirdi.</h4>
+                                        <p className="text-gray-600 mb-6"><strong>{connectionPerson}</strong> ile <strong>{connectionType.toLowerCase()}</strong>. Oksitosin hormonunuz aktive oldu ve stres tepkiniz hafifledi.</p>
+                                        <button onClick={() => { setRelSaved(false); setConnectionPerson(''); setConnectionType(''); }} className="text-orange-600 font-medium underline">Yeni bir bağ kaydet</button>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                    </div>
+                </div>
+            );
+        };
+
+        // --- JOURNEY SECTION ---
+        const JourneySection = () => {
+            const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+            const [dailyData, setDailyData] = useState({});
+            const [contacts, setContacts] = useState([]);
+            const [activeCategory, setActiveCategory] = useState('sleep');
+            
+            useEffect(() => {
+                const storedData = localStorage.getItem('toxic-stress-app-data');
+                if (storedData) setDailyData(JSON.parse(storedData));
+                const storedContacts = localStorage.getItem('toxic-stress-contacts');
+                if (storedContacts) setContacts(JSON.parse(storedContacts));
+            }, []);
+
+            const saveData = (newData) => {
+                setDailyData(newData);
+                localStorage.setItem('toxic-stress-app-data', JSON.stringify(newData));
+            };
+
+            const saveContacts = (newContacts) => {
+                setContacts(newContacts);
+                localStorage.setItem('toxic-stress-contacts', JSON.stringify(newContacts));
+            };
+
+            const handleEntryChange = (field, value) => {
+                const currentData = dailyData[selectedDate] || {};
+                const categoryData = currentData[activeCategory] || {};
+                const newData = { ...dailyData, [selectedDate]: { ...currentData, [activeCategory]: { ...categoryData, [field]: value } } };
+                saveData(newData);
+            };
+
+            const getEntry = (field) => dailyData[selectedDate]?.[activeCategory]?.[field] || "";
+
+            const handleExport = () => {
+                const dataToExport = { appData: localStorage.getItem('toxic-stress-app-data'), contacts: localStorage.getItem('toxic-stress-contacts') };
+                const blob = new Blob([JSON.stringify(dataToExport)], {type: "application/json"});
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url; a.download = "iyilesme_verilerim.json"; a.click(); URL.revokeObjectURL(url);
+            };
+            const handleImport = (e) => {
+                const file = e.target.files[0];
+                if(!file) return;
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    try {
+                        const parsed = JSON.parse(event.target.result);
+                        if(parsed.appData) localStorage.setItem('toxic-stress-app-data', parsed.appData);
+                        if(parsed.contacts) localStorage.setItem('toxic-stress-contacts', parsed.contacts);
+                        alert("Verileriniz başarıyla içe aktarıldı. Yansıtılması için sayfa yenileniyor.");
+                        window.location.reload();
+                    } catch(err) { alert("Dosya okunamadı."); }
+                };
+                reader.readAsText(file);
+            };
+
+            const [newContactName, setNewContactName] = useState("");
+            const [newContactPhone, setNewContactPhone] = useState("");
+            const addContact = () => {
+                if(newContactName && newContactPhone) {
+                    saveContacts([...contacts, { id: Date.now(), name: newContactName, phone: newContactPhone }]);
+                    setNewContactName(""); setNewContactPhone("");
+                }
+            };
+            const openWhatsapp = (phone) => window.open(`https://wa.me/${phone.replace(/[^0-9]/g, '')}`, '_blank');
+
+            return (
+                <div className="max-w-7xl mx-auto py-10 px-4">
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                        <div className="lg:col-span-4 space-y-6">
+                            <div className="bg-slate-50 p-6 rounded-xl shadow-sm border border-slate-200">
+                                <h3 className="font-bold text-slate-800 mb-4 flex items-center"><Icons.RefreshCcw className="mr-2 text-slate-600" size={18}/> Verilerimi Yönet</h3>
+                                <div className="flex gap-2">
+                                    <button onClick={handleExport} className="flex-1 bg-white border border-slate-300 text-slate-700 py-2 px-3 rounded hover:bg-slate-50 flex items-center justify-center gap-2 text-sm"><Icons.Download size={16} /> Dışa Aktar</button>
+                                    <label className="flex-1 bg-white border border-slate-300 text-slate-700 py-2 px-3 rounded hover:bg-slate-50 flex items-center justify-center gap-2 text-sm cursor-pointer"><Icons.Upload size={16} /> İçe Aktar<input type="file" accept=".json" onChange={handleImport} className="hidden" /></label>
+                                </div>
+                            </div>
+
+                            <div className="bg-white p-6 rounded-xl shadow-md border border-gray-100">
+                                <h3 className="font-bold text-gray-800 mb-4 flex items-center"><Icons.Calendar className="mr-2 text-teal-600"/> Tarih Seç</h3>
+                                <input type="date" value={selectedDate} onChange={(e) => setSelectedDate(e.target.value)} className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-teal-500 outline-none"/>
+                            </div>
+
+                            <div className="bg-orange-50 p-6 rounded-xl border border-orange-100">
+                                <h3 className="font-bold text-orange-900 mb-4 flex items-center"><Icons.Users className="mr-2"/> Destek Ağı</h3>
+                                <div className="space-y-2 mb-4">
+                                    <input type="text" placeholder="İsim" value={newContactName} onChange={e => setNewContactName(e.target.value)} className="w-full p-2 rounded border border-orange-200 text-sm"/>
+                                    <div className="flex gap-2">
+                                        <input type="tel" placeholder="Tel (905xxxxxxxxx)" value={newContactPhone} onChange={e => setNewContactPhone(e.target.value)} className="w-full p-2 rounded border border-orange-200 text-sm"/>
+                                        <button onClick={addContact} className="bg-orange-500 text-white p-2 rounded hover:bg-orange-600"><Icons.Plus size={20} /></button>
+                                    </div>
+                                </div>
+                                <div className="space-y-2 max-h-48 overflow-y-auto">
+                                    {contacts.map(c => (
+                                        <div key={c.id} className="bg-white p-3 rounded-lg shadow-sm flex justify-between items-center">
+                                            <div><div className="font-bold text-sm">{c.name}</div><div className="text-xs text-gray-500">{c.phone}</div></div>
+                                            <div className="flex gap-2">
+                                                <a href={`tel:${c.phone}`} className="text-blue-500 hover:bg-blue-50 p-1 rounded transition-colors" title="Ara"><Icons.Phone size={20} /></a>
+                                                <button onClick={() => openWhatsapp(c.phone)} className="text-green-600 hover:bg-green-50 p-1 rounded transition-colors" title="WhatsApp Mesajı"><Icons.MessageCircle size={20} /></button>
+                                                <button onClick={() => setContacts(contacts.filter(x => x.id !== c.id))} className="text-red-400 hover:bg-red-50 p-1 rounded transition-colors" title="Sil"><Icons.Trash size={18} /></button>
+                                            </div>
+                                        </div>
+                                    ))}
+                                    {contacts.length === 0 && <p className="text-sm text-center text-orange-400">Henüz kimse eklenmedi.</p>}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="lg:col-span-8">
+                            <div className="bg-white rounded-xl shadow-lg overflow-hidden min-h-[600px] flex flex-col">
+                                <div className="flex overflow-x-auto border-b bg-gray-50 no-scrollbar">
+                                    {[{ id: 'sleep', label: 'Uyku', icon: <Icons.Moon size={18}/> }, { id: 'exercise', label: 'Egzersiz', icon: <Icons.Activity size={18}/> }, { id: 'mental', label: 'Ruh Hali', icon: <Icons.Smile size={18}/> }].map(cat => (
+                                        <button key={cat.id} onClick={() => setActiveCategory(cat.id)} className={`flex items-center gap-2 px-6 py-4 font-medium whitespace-nowrap transition-colors ${activeCategory === cat.id ? 'bg-white border-b-2 border-teal-500 text-teal-700' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'}`}>
+                                            {cat.icon} {cat.label}
+                                        </button>
+                                    ))}
+                                </div>
+                                <div className="p-8 flex-1 animate-fade-in">
+                                    <h2 className="text-2xl font-bold text-gray-800 mb-6">{selectedDate === new Date().toISOString().split('T')[0] ? 'Bugün' : selectedDate} - Veri Girişi</h2>
+                                    <div className="space-y-6">
+                                        {activeCategory === 'sleep' && (
+                                            <>
+                                                <div><label className="block text-sm font-medium text-gray-700 mb-2">Kaç saat uyudun?</label><input type="number" value={getEntry('hours')} onChange={(e) => handleEntryChange('hours', e.target.value)} className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-indigo-500" placeholder="Örn: 7.5"/></div>
+                                                <div><label className="block text-sm font-medium text-gray-700 mb-2">Uyku Kalitesi (1-5)</label>
+                                                    <div className="flex gap-2">{[1,2,3,4,5].map(star => (<button key={star} onClick={() => handleEntryChange('quality', star)} className={`p-2 rounded-full ${getEntry('quality') >= star ? 'text-yellow-400' : 'text-gray-300'}`}><Icons.Star size={32} fill="currentColor" /></button>))}</div>
+                                                </div>
+                                            </>
+                                        )}
+                                        {activeCategory === 'exercise' && (
+                                            <>
+                                                <div><label className="block text-sm font-medium text-gray-700 mb-2">Süre (Dakika)</label><input type="number" value={getEntry('minutes')} onChange={(e) => handleEntryChange('minutes', e.target.value)} className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-red-500"/></div>
+                                            </>
+                                        )}
+                                        {activeCategory === 'mental' && (
+                                            <>
+                                                <div><label className="block text-sm font-medium text-gray-700 mb-2">Bugünkü Ruh Halin (1-10)</label><input type="range" min="1" max="10" value={getEntry('score') || 5} onChange={(e) => handleEntryChange('score', e.target.value)} className="w-full accent-purple-600"/><div className="flex justify-between text-xs text-gray-500 mt-1"><span>Çok Kötü</span><span className="font-bold text-lg text-purple-600">{getEntry('score') || 5}</span><span>Harika</span></div></div>
+                                                <div><label className="block text-sm font-medium text-gray-700 mb-2">Günlük Notlar</label><textarea value={getEntry('notes')} onChange={(e) => handleEntryChange('notes', e.target.value)} className="w-full p-3 border rounded-lg h-32 focus:ring-2 focus:ring-purple-500"></textarea></div>
+                                            </>
+                                        )}
+                                    </div>
+                                    <div className="mt-8 p-4 bg-gray-50 rounded text-center text-sm text-gray-500">Değişiklikler otomatik olarak kaydedilir. Özetleri görmek için "Özetler" sekmesine gidin.</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        // --- REPORTS SECTION ---
+        const ReportsSection = () => {
+            const [reportTab, setReportTab] = useState('weekly');
+            const [dailyData, setDailyData] = useState({});
+
+            useEffect(() => {
+                const storedData = localStorage.getItem('toxic-stress-app-data');
+                if (storedData) setDailyData(JSON.parse(storedData));
+            }, []);
+
+            const generateData = (days) => {
+                const dates = [];
+                for (let i = days - 1; i >= 0; i--) {
+                    const d = new Date();
+                    d.setDate(d.getDate() - i);
+                    const dateStr = d.toISOString().split('T')[0];
+                    const dayData = dailyData[dateStr] || {};
+                    dates.push({
+                        date: dateStr.slice(5),
+                        sleepHours: parseFloat(dayData.sleep?.hours || 0),
+                        moodScore: parseFloat(dayData.mental?.score || 0),
+                        exerciseMins: parseFloat(dayData.exercise?.minutes || 0)
+                    });
+                }
+                return dates;
+            };
+
+            const weeklyData = useMemo(() => generateData(7), [dailyData]);
+            const monthlyData = useMemo(() => generateData(30), [dailyData]);
+
+            const detailedStats = useMemo(() => {
+                const mData = monthlyData;
+                const totalSleep = mData.reduce((acc, curr) => acc + curr.sleepHours, 0);
+                const sleepDays = mData.filter(d => d.sleepHours > 0).length || 1;
+                const avgSleep = (totalSleep / sleepDays).toFixed(1);
+
+                const totalMood = mData.reduce((acc, curr) => acc + curr.moodScore, 0);
+                const moodDays = mData.filter(d => d.moodScore > 0).length || 1;
+                const avgMood = (totalMood / moodDays).toFixed(1);
+
+                const goodMoodDays = mData.filter(d => d.moodScore >= 7);
+                const avgSleepOnGoodMoodDays = goodMoodDays.length ? (goodMoodDays.reduce((acc, curr) => acc + curr.sleepHours, 0) / goodMoodDays.length).toFixed(1) : 0;
+
+                return { avgSleep, avgMood, avgSleepOnGoodMoodDays };
+            }, [monthlyData]);
+
+            return (
+                <div className="max-w-6xl mx-auto py-10 px-4">
+                    <div className="bg-white rounded-2xl shadow-xl overflow-hidden min-h-[600px] flex flex-col">
+                        <div className="flex border-b bg-gray-50">
+                            <button onClick={() => setReportTab('weekly')} className={`flex-1 py-4 font-bold text-center ${reportTab === 'weekly' ? 'bg-white border-b-2 border-teal-500 text-teal-700' : 'text-gray-500 hover:bg-gray-100'}`}>Haftalık Özet</button>
+                            <button onClick={() => setReportTab('monthly')} className={`flex-1 py-4 font-bold text-center ${reportTab === 'monthly' ? 'bg-white border-b-2 border-teal-500 text-teal-700' : 'text-gray-500 hover:bg-gray-100'}`}>Aylık Özet</button>
+                            <button onClick={() => setReportTab('detailed')} className={`flex-1 py-4 font-bold text-center ${reportTab === 'detailed' ? 'bg-white border-b-2 border-teal-500 text-teal-700' : 'text-gray-500 hover:bg-gray-100'}`}>Detaylı Analiz</button>
+                        </div>
+                        
+                        <div className="p-8 animate-fade-in flex-1">
+                            {reportTab === 'weekly' && (
+                                <div className="space-y-8 max-w-4xl mx-auto">
+                                    <h2 className="text-2xl font-bold text-gray-800 mb-6"><Icons.Activity className="inline mr-2 text-teal-600"/> Son 7 Günlük Grafikler</h2>
+                                    <div className="bg-slate-50 p-6 rounded-xl border">
+                                        <LineChart data={weeklyData} dataKey="sleepHours" color="#4f46e5" label="Uyku Süresi (Saat)" />
+                                    </div>
+                                    <div className="bg-slate-50 p-6 rounded-xl border">
+                                        <LineChart data={weeklyData} dataKey="moodScore" color="#ec4899" label="Ruh Hali (1-10)" />
+                                    </div>
+                                </div>
+                            )}
+
+                            {reportTab === 'monthly' && (
+                                <div className="space-y-8 max-w-4xl mx-auto">
+                                    <h2 className="text-2xl font-bold text-gray-800 mb-6"><Icons.Calendar className="inline mr-2 text-blue-600"/> Son 30 Günlük Grafikler</h2>
+                                    <div className="bg-slate-50 p-6 rounded-xl border">
+                                        <LineChart data={monthlyData} dataKey="sleepHours" color="#4f46e5" label="Uyku Süresi (Saat)" />
+                                    </div>
+                                    <div className="bg-slate-50 p-6 rounded-xl border">
+                                        <LineChart data={monthlyData} dataKey="moodScore" color="#ec4899" label="Ruh Hali (1-10)" />
+                                    </div>
+                                </div>
+                            )}
+
+                            {reportTab === 'detailed' && (
+                                <div className="max-w-4xl mx-auto">
+                                    <h2 className="text-2xl font-bold text-gray-800 mb-6"><Icons.Brain className="inline mr-2 text-purple-600"/> Detaylı İstatistikler (Son 30 Gün)</h2>
+                                    
+                                    <div className="grid md:grid-cols-2 gap-6 mb-8">
+                                        <div className="bg-indigo-50 p-6 rounded-xl border border-indigo-100 text-center">
+                                            <div className="text-sm font-bold text-indigo-800 uppercase mb-2">Ortalama Uyku</div>
+                                            <div className="text-4xl font-extrabold text-indigo-600">{detailedStats.avgSleep} <span className="text-lg">Saat</span></div>
+                                        </div>
+                                        <div className="bg-pink-50 p-6 rounded-xl border border-pink-100 text-center">
+                                            <div className="text-sm font-bold text-pink-800 uppercase mb-2">Ortalama Ruh Hali</div>
+                                            <div className="text-4xl font-extrabold text-pink-600">{detailedStats.avgMood} <span className="text-lg">/ 10</span></div>
+                                        </div>
+                                    </div>
+
+                                    <div className="bg-teal-50 p-8 rounded-xl border border-teal-100">
+                                        <h3 className="text-xl font-bold text-teal-900 mb-4">Uyku ve Ruh Hali İlişkisi</h3>
+                                        <p className="text-teal-800 mb-4">Ruh halinizin <strong>7 ve üzeri</strong> olduğu günlerdeki uyku ortalamanız:</p>
+                                        <div className="flex items-center">
+                                            <div className="bg-white px-6 py-3 rounded-lg shadow-sm font-bold text-teal-700 text-2xl mr-4">{detailedStats.avgSleepOnGoodMoodDays} Saat</div>
+                                            <p className="text-sm text-teal-700 opacity-80">Uyku düzeninin stres ve iyileşme üzerindeki etkisini kendi verilerinizle gözlemleyebilirsiniz.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        // --- READING SECTION ---
+        const ReadingSection = () => {
+            const blogs = [
+                { title: "Olumsuz Çocukluk Deneyimleri (ACEs): Hayat Boyu Süren Etkiler ve Umut Işığı", url: "https://www.travmaduyarli.com/post/olumsuz-%C3%A7ocukluk-deneyimleri-aces-hayat-boyu-s%C3%BCren-etkiler-ve-umut-i%C5%9F%C4%B1%C4%9F%C4%B1", img: "https://images.unsplash.com/photo-1499209974431-9dddcece7f88?auto=format&fit=crop&w=600&q=80" },
+                { title: "Sessiz Düşman: Çocukluk Deneyimleri Fiziksel Sağlığınızı Nasıl Sabote Eder", url: "https://www.travmaduyarli.com/post/sessiz-d%C3%BC%C5%9Fman-%C3%A7ocukluk-deneyimleri-fiziksel-sa%C4%9Fl%C4%B1%C4%9F%C4%B1n%C4%B1z%C4%B1-nas%C4%B1l-sabote-eder", img: "https://static.wixstatic.com/media/f4a9fb_f78f07dbaacd4d8d8c43d5040f6660b3~mv2.jpg/v1/fill/w_740,h_492,al_c,q_85,usm_0.66_1.00_0.01,enc_avif,quality_auto/f4a9fb_f78f07dbaacd4d8d8c43d5040f6660b3~mv2.jpg" }
+            ];
+
+            const books = [
+                { title: "Erken Travmanın Kronik Enflamasyonun Kaynağı Olarak İncelenmesi", url: "https://www.travmaduyarli.com/post/kitap-i-ncelemesi-erken-travman%C4%B1n-kronik-enflamasyonun-kayna%C4%9F%C4%B1-olarak-i-ncelenmesi-psik%C3%B6n%C3%B6roimm%C3%BCnol", img: "https://images.unsplash.com/photo-1544947950-fa07a98d237f?auto=format&fit=crop&w=600&q=80" },
+                { title: "Çocukluk Travması", url: "https://www.travmaduyarli.com/post/kitap-i-ncelemesi-%C3%A7ocukluk-travmas%C4%B1", img: "https://images.unsplash.com/photo-1512820790803-83ca734da794?auto=format&fit=crop&w=600&q=80" },
+                { title: "Olumsuz Çocukluk Deneyimleri - Gordon J. G. Asmundson", url: "https://www.travmaduyarli.com/post/kitap-i-ncelemesi-olumsuz-%C3%A7ocukluk-deneyimleri-gordon-j-g-asmundson", img: "https://images.unsplash.com/photo-1589829085413-56de8ae18c73?auto=format&fit=crop&w=600&q=80" },
+                { title: "Olumsuz Çocukluk Deneyimleri ve Ciddi Gençlik Şiddeti", url: "https://www.travmaduyarli.com/post/kitap-i-ncelemesi-olumsuz-%C3%A7ocukluk-deneyimleri-ve-ciddi-gen%C3%A7lik-%C5%9Fiddeti", img: "https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?auto=format&fit=crop&w=600&q=80" },
+                { title: "Olumsuz Çocukluk Deneyimleri - Kathleen Brewer-Smyth", url: "https://www.travmaduyarli.com/post/kitap-i-ncelemesi-olumsuz-%C3%A7ocukluk-deneyimleri-kathleen-brewer-smyth", img: "https://images.unsplash.com/photo-1532012197267-da84d127e765?auto=format&fit=crop&w=600&q=80" },
+                { title: "Travmalı Çocukluk, Yetişkinlik Hastalıkları ve Sağlık Bakımında Devrim İhtiyacı", url: "https://www.travmaduyarli.com/post/kitap-i-ncelemesi-travmal%C4%B1-%C3%A7ocukluk-yeti%C5%9Fkinlik-hastal%C4%B1klar%C4%B1-ve-sa%C4%9Fl%C4%B1k-bak%C4%B1m%C4%B1nda-devrim-i-htiyac%C4%B1-%C3%BC", img: "https://images.unsplash.com/photo-1506880018603-83d5b814b5a6?auto=format&fit=crop&w=600&q=80" },
+                { title: "Kompleks Posttravmatik Stres Bozukluğunun İyileştirilmesi", url: "https://www.travmaduyarli.com/post/kitap-i-ncelemesi-kompleks-posttravmatik-stres-bozuklu%C4%9Funun-i-yile%C5%9Ftirilmesi-bir-klinik%C3%A7inin-rehber", img: "https://images.unsplash.com/photo-1491841550275-ad7854e35ca6?auto=format&fit=crop&w=600&q=80" },
+                { title: "Karmaşık Travma ve Ayrışma İçin Basit Rehber", url: "https://www.travmaduyarli.com/post/kitap-i-ncelemesi-karma%C5%9F%C4%B1k-travma-ve-ayr%C4%B1%C5%9Fma-i%C3%A7in-basit-rehber", img: "https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?auto=format&fit=crop&w=600&q=80" },
+                { title: "Çocukluk Çağı Travması ve Direnç: Pratik Bir Kılavuz", url: "https://www.travmaduyarli.com/post/kitap-i-ncelemesi-%C3%A7ocukluk-%C3%A7a%C4%9F%C4%B1-travmas%C4%B1-ve-diren%C3%A7-pratik-bir-k%C4%B1lavuz", img: "https://static.wixstatic.com/media/f4a9fb_b882242d1a5e4c8fa2ed658c28660762~mv2.jpg/v1/fill/w_329,h_427,al_c,q_80,usm_0.66_1.00_0.01,enc_avif,quality_auto/f4a9fb_b882242d1a5e4c8fa2ed658c28660762~mv2.jpg" }
+            ];
+
+            const Card = ({ item }) => (
+                <a href={item.url} target="_blank" rel="noopener noreferrer" className="block bg-white rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100 group">
+                    <div className="h-48 overflow-hidden relative">
+                        <img src={item.img} alt={item.title} className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-500" />
+                        <div className="absolute inset-0 bg-black bg-opacity-10 group-hover:bg-opacity-0 transition-all"></div>
+                    </div>
+                    <div className="p-5">
+                        <h4 className="font-bold text-gray-800 line-clamp-2 leading-snug group-hover:text-teal-600 transition-colors">{item.title}</h4>
+                        <div className="mt-4 flex items-center text-teal-600 font-medium text-sm">Okumaya Başla <Icons.ArrowRight size={16} className="ml-1" /></div>
+                    </div>
+                </a>
+            );
+
+            return (
+                <div className="max-w-7xl mx-auto py-10 px-4">
+                    <div className="text-center mb-12">
+                        <h2 className="text-3xl font-bold text-gray-800 mb-4"><Icons.Book className="inline mr-2 text-teal-600"/>Okuma Önerileri</h2>
+                        <p className="text-lg text-gray-600">İyileşme yolculuğunuzu destekleyecek makaleler ve kitap incelemeleri.</p>
+                    </div>
+
+                    <div className="mb-16">
+                        <h3 className="text-2xl font-bold text-indigo-900 mb-6 border-b pb-2">Blog Yazıları</h3>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            {blogs.map((blog, idx) => <Card key={idx} item={blog} />)}
+                        </div>
+                    </div>
+
+                    <div>
+                        <h3 className="text-2xl font-bold text-orange-900 mb-6 border-b pb-2">Kitap İncelemeleri</h3>
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                            {books.map((book, idx) => <Card key={idx} item={book} />)}
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        // --- CONTACT SECTION ---
+        const ContactSection = () => {
+            return (
+                <div className="max-w-3xl mx-auto py-10 px-4">
+                    <div className="bg-white rounded-2xl shadow-xl overflow-hidden p-8">
+                        <div className="flex items-center gap-3 mb-6">
+                            <div className="bg-teal-100 p-3 rounded-full text-teal-600"><Icons.MessageCircle size={28}/></div>
+                            <h2 className="text-3xl font-bold text-teal-800">İletişim & Öneriler</h2>
+                        </div>
+                        <p className="text-gray-600 mb-8 leading-relaxed">
+                            Bu platformun gelişimine katkıda bulunmak, görüşlerinizi, önerilerinizi veya geri bildirimlerinizi paylaşmak isterseniz aşağıdaki formu doldurabilirsiniz. Mesajlarınız doğrudan proje yöneticisine iletilecektir.
+                        </p>
+                        
+                        <form action="https://formspree.io/f/BURAYA_SİZE_VERECEGİMİZ_KOD_GELECEK" method="POST" className="space-y-6">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">Adınız</label>
+                                <input type="text" name="name" required placeholder="Adınız Soyadınız" className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 outline-none transition-all"/>
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">E-posta Adresiniz</label>
+                                <input type="email" name="email" required placeholder="ornek@mail.com" className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 outline-none transition-all"/>
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">Mesajınız</label>
+                                <textarea name="message" required rows="5" placeholder="Görüş ve önerilerinizi buraya yazabilirsiniz..." className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 outline-none transition-all resize-none"></textarea>
+                            </div>
+                            <button type="submit" className="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-4 px-8 rounded-lg shadow-md transition-all transform active:scale-[0.98]">
+                                Mesajı Gönder
+                            </button>
+                        </form>
+                        <p className="text-xs text-gray-400 mt-6 text-center">Form aracı üzerinden gönderilen iletiler yalnızca projenin geliştirilmesi ve size geri dönüş yapılabilmesi amacıyla kullanılacaktır.</p>
+                    </div>
+                </div>
+            );
+        };
+
+        // --- MAIN APP ---
+        const ToxicStressApp = () => {
+            const [activeTab, setActiveTab] = useState('home');
+            const [selectedStrategy, setSelectedStrategy] = useState(null);
+
+            useEffect(() => {
+                if (activeTab !== 'healing') setSelectedStrategy(null);
+                window.scrollTo(0, 0); 
+            }, [activeTab]);
+
+            return (
+                <div className="min-h-screen flex flex-col">
+                    <Navigation activeTab={activeTab} setActiveTab={setActiveTab} />
+                    <main className="flex-1 transition-all duration-300">
+                        {activeTab === 'home' && <HomeSection setActiveTab={setActiveTab} />}
+                        {activeTab === 'ace-test' && <AceTestSection onGoToHealing={() => setActiveTab('healing')} />}
+                        {activeTab === 'science' && <ScienceSection />}
+                        {activeTab === 'healing' && !selectedStrategy && <HealingMenu onViewDetail={setSelectedStrategy} />}
+                        {activeTab === 'healing' && selectedStrategy && <HealingDetail strategy={selectedStrategy} onBack={() => setSelectedStrategy(null)} />}
+                        {activeTab === 'journey' && <JourneySection />}
+                        {activeTab === 'reports' && <ReportsSection />}
+                        {activeTab === 'reading' && <ReadingSection />}
+                        {activeTab === 'contact' && <ContactSection />}
+                    </main>
+
+                    <footer className="bg-white border-t py-8 mt-12 text-center text-gray-500 text-sm">
+                        <p className="mb-2 font-medium">Bu uygulama <a href="https://www.travmaduyarli.com" target="_blank" rel="noopener noreferrer" className="text-teal-600 hover:text-teal-800 underline transition-colors">www.travmaduyarli.com</a> sitesi ziyaretçileri için hazırlanmıştır.</p>
+                        <p>Dr. Nadine Burke Harris'in "Toksik Çocukluk Stresi" kitabındaki bilgiler ışığında geliştirilmiştir.</p>
+                        <p className="mt-1 opacity-60">Kişisel verileriniz (İletişim formu hariç) yalnızca kendi cihazınızda (localStorage) saklanır, dışarı aktarılmaz.</p>
+                    </footer>
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<ToxicStressApp />);
+    </script>
+</body>
+</html>
