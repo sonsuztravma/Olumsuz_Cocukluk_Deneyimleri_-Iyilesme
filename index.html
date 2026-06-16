@@ -24,9 +24,15 @@
             0%, 100% { opacity: 1; transform: scale(1); }
             50% { opacity: 0.8; transform: scale(1.05); }
         }
+        @keyframes dash {
+            to { stroke-dashoffset: 0; }
+        }
         .animate-fade-in { animation: fade-in 0.5s ease-out forwards; }
         .animate-float { animation: float 3s ease-in-out infinite; }
         .animate-pulse-slow { animation: pulse-slow 4s ease-in-out infinite; }
+        .animate-dash { animation: dash 1s ease-out forwards; }
+        
+        /* Kaydırma Çubuğu Gizleme */
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
@@ -36,119 +42,123 @@
 
     <script type="text/babel">
         const { useState, useEffect, useMemo } = React;
-        const e = React.createElement;
 
-        // ICON BİLEŞENİ
-        const Icon = ({ path, size = 24, className = "" }) => 
-            e("svg", {
-                xmlns: "http://www.w3.org/2000/svg",
-                width: size,
-                height: size,
-                viewBox: "0 0 24 24",
-                fill: "none",
-                stroke: "currentColor",
-                strokeWidth: "2",
-                strokeLinecap: "round",
-                strokeLinejoin: "round",
-                className: className
-            }, path);
+        // --- ICON BİLEŞENLERİ ---
+        const Icon = ({ path, size = 24, className = "" }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+                {path}
+            </svg>
+        );
 
         const Icons = {
-            Shield: (props) => e(Icon, { ...props, path: e("path", { d: "M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" }) }),
-            BookOpen: (props) => e(Icon, { ...props, path: e(React.Fragment, null, e("path", { d: "M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" }), e("path", { d: "M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" })) }),
-            Activity: (props) => e(Icon, { ...props, path: e("polyline", { points: "22 12 18 12 15 21 9 3 6 12 2 12" }) }),
-            Brain: (props) => e(Icon, { ...props, path: e(React.Fragment, null, e("path", { d: "M12 5a3 3 0 1 0-5.997.125 4 4 0 0 0-2.526 5.77 4 4 0 0 0 .556 6.588A4 4 0 1 0 12 18Z" }), e("path", { d: "M12 5a3 3 0 1 1 5.997.125 4 4 0 0 1 2.526 5.77 4 4 0 0 1-.556 6.588A4 4 0 1 1 12 18Z" })) }),
-            Heart: (props) => e(Icon, { ...props, path: e("path", { d: "M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" }) }),
-            Moon: (props) => e(Icon, { ...props, path: e("path", { d: "M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" }) }),
-            Utensils: (props) => e(Icon, { ...props, path: e(React.Fragment, null, e("path", { d: "M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2" }), e("line", { x1: "7", y1: "2", x2: "7", y2: "22" }), e("path", { d: "M21 15V2v0a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3zm0 0v7" })) }),
-            Wind: (props) => e(Icon, { ...props, path: e(React.Fragment, null, e("path", { d: "M9.59 4.59A2 2 0 1 1 11 8H2m10.59 11.41A2 2 0 1 0 14 16H2m15.73-8.27A2.5 2.5 0 1 1 19.5 12H2" })) }),
-            Users: (props) => e(Icon, { ...props, path: e(React.Fragment, null, e("path", { d: "M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" }), e("circle", { cx: "9", cy: "7", r: "4" }), e("path", { d: "M23 21v-2a4 4 0 0 0-3-3.87" }), e("path", { d: "M16 3.13a4 4 0 0 1 0 7.75" })) }),
-            CheckCircle: (props) => e(Icon, { ...props, path: e(React.Fragment, null, e("path", { d: "M22 11.08V12a10 10 0 1 1-5.93-9.14" }), e("polyline", { points: "22 4 12 14.01 9 11.01" })) }),
-            ArrowRight: (props) => e(Icon, { ...props, path: e(React.Fragment, null, e("line", { x1: "5", y1: "12", x2: "19", y2: "12" }), e("polyline", { points: "12 5 19 12 12 19" })) }),
-            ArrowLeft: (props) => e(Icon, { ...props, path: e(React.Fragment, null, e("line", { x1: "19", y1: "12", x2: "5", y2: "12" }), e("polyline", { points: "12 19 5 12 12 5" })) }),
-            RefreshCcw: (props) => e(Icon, { ...props, path: e(React.Fragment, null, e("path", { d: "M1 4v6h6" }), e("path", { d: "M3.51 15a9 9 0 1 0 2.13-9.36L1 10" })) }),
-            Calendar: (props) => e(Icon, { ...props, path: e(React.Fragment, null, e("rect", { x: "3", y: "4", width: "18", height: "18", rx: "2", ry: "2" }), e("line", { x1: "16", y1: "2", x2: "16", y2: "6" }), e("line", { x1: "8", y1: "2", x2: "8", y2: "6" }), e("line", { x1: "3", y1: "10", x2: "21", y2: "10" })) }),
-            MessageCircle: (props) => e(Icon, { ...props, path: e("path", { d: "M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" }) }),
-            Phone: (props) => e(Icon, { ...props, path: e("path", { d: "M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" }) }),
-            Trash: (props) => e(Icon, { ...props, path: e(React.Fragment, null, e("polyline", { points: "3 6 5 6 21 6" }), e("path", { d: "M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" })) }),
-            Plus: (props) => e(Icon, { ...props, path: e(React.Fragment, null, e("line", { x1: "12", y1: "5", x2: "12", y2: "19" }), e("line", { x1: "5", y1: "12", x2: "19", y2: "12" })) }),
-            BarChart: (props) => e(Icon, { ...props, path: e(React.Fragment, null, e("line", { x1: "18", y1: "20", x2: "18", y2: "10" }), e("line", { x1: "12", y1: "20", x2: "12", y2: "4" }), e("line", { x1: "6", y1: "20", x2: "6", y2: "14" })) }),
-            Book: (props) => e(Icon, { ...props, path: e(React.Fragment, null, e("path", { d: "M4 19.5A2.5 2.5 0 0 1 6.5 17H20" }), e("path", { d: "M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" })) })
+            Shield: (props) => <Icon {...props} path={<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />} />,
+            BookOpen: (props) => <Icon {...props} path={<><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></>} />,
+            Activity: (props) => <Icon {...props} path={<polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />} />,
+            Brain: (props) => <Icon {...props} path={<><path d="M12 5a3 3 0 1 0-5.997.125 4 4 0 0 0-2.526 5.77 4 4 0 0 0 .556 6.588A4 4 0 1 0 12 18Z"/><path d="M12 5a3 3 0 1 1 5.997.125 4 4 0 0 1 2.526 5.77 4 4 0 0 1-.556 6.588A4 4 0 1 1 12 18Z"/></>} />,
+            Heart: (props) => <Icon {...props} path={<path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />} />,
+            ArrowRight: (props) => <Icon {...props} path={<><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></>} />,
+            ArrowLeft: (props) => <Icon {...props} path={<><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></>} />,
+            Info: (props) => <Icon {...props} path={<><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></>} />,
+            RefreshCcw: (props) => <Icon {...props} path={<><path d="M1 4v6h6"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></>} />,
+            ChevronRight: (props) => <Icon {...props} path={<polyline points="9 18 15 12 9 6" />} />,
+            Moon: (props) => <Icon {...props} path={<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />} />,
+            Utensils: (props) => <Icon {...props} path={<><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2v0a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"/></>} />,
+            Wind: (props) => <Icon {...props} path={<><path d="M9.59 4.59A2 2 0 1 1 11 8H2m10.59 11.41A2 2 0 1 0 14 16H2m15.73-8.27A2.5 2.5 0 1 1 19.5 12H2"/></>} />,
+            Users: (props) => <Icon {...props} path={<><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></>} />,
+            CheckCircle: (props) => <Icon {...props} path={<><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></>} />,
+            Smile: (props) => <Icon {...props} path={<><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></>} />,
+            Map: (props) => <Icon {...props} path={<><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></>} />,
+            Plus: (props) => <Icon {...props} path={<><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></>} />,
+            Calendar: (props) => <Icon {...props} path={<><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></>} />,
+            MessageCircle: (props) => <Icon {...props} path={<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />} />,
+            Phone: (props) => <Icon {...props} path={<path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />} />,
+            Trash: (props) => <Icon {...props} path={<><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></>} />,
+            Star: (props) => <Icon {...props} path={<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>} />,
+            Download: (props) => <Icon {...props} path={<><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></>} />,
+            Upload: (props) => <Icon {...props} path={<><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></>} />,
+            BarChart: (props) => <Icon {...props} path={<><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></>} />,
+            Book: (props) => <Icon {...props} path={<><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></>} />
         };
 
-        // SIMPLE SLEEP VISUAL
-        const SleepVisual = ({ isDark }) => 
-            e("div", { className: "w-full h-64 flex items-center justify-center bg-gradient-to-b from-blue-200 to-indigo-100 rounded-lg" },
-                e("div", { className: "text-6xl" }, isDark ? "🌙" : "☀️")
-            );
-
-        // NAVIGATION
+        // --- NAVIGATION ---
         const Navigation = ({ activeTab, setActiveTab }) => {
             const tabs = [
-                { id: 'home', label: 'Giriş', icon: e(Icons.BookOpen, { size: 20 }) },
-                { id: 'ace-test', label: 'ACE Testi', icon: e(Icons.Activity, { size: 20 }) },
-                { id: 'science', label: 'Bilim', icon: e(Icons.Brain, { size: 20 }) },
-                { id: 'healing', label: 'İyileşme', icon: e(Icons.Heart, { size: 20 }) },
-                { id: 'contact', label: 'İletişim', icon: e(Icons.MessageCircle, { size: 20 }) }
+                { id: 'home', label: 'Giriş', icon: <Icons.BookOpen size={20} /> },
+                { id: 'ace-test', label: 'ACE Testi', icon: <Icons.Activity size={20} /> },
+                { id: 'science', label: 'Bilim', icon: <Icons.Brain size={20} /> },
+                { id: 'healing', label: 'İyileşme', icon: <Icons.Heart size={20} /> },
+                { id: 'contact', label: 'İletişim', icon: <Icons.MessageCircle size={20} /> }
             ];
 
-            return e("nav", { className: "bg-white shadow-md sticky top-0 z-50" },
-                e("div", { className: "max-w-7xl mx-auto px-4" },
-                    e("div", { className: "flex justify-between items-center h-16" },
-                        e("div", { className: "flex items-center space-x-2 font-bold text-xl text-teal-700" },
-                            e(Icons.Shield, { size: 24 }),
-                            e("span", { className: "hidden lg:inline" }, "Toksik Stres & İyileşme")
-                        ),
-                        e("div", { className: "flex space-x-1 overflow-x-auto no-scrollbar" },
-                            tabs.map((tab) =>
-                                e("button", {
-                                    key: tab.id,
-                                    onClick: () => setActiveTab(tab.id),
-                                    className: `flex items-center space-x-1 px-3 py-2 rounded-md text-sm font-medium transition-colors ${activeTab === tab.id ? 'bg-teal-100 text-teal-800' : 'text-gray-600 hover:bg-gray-100'}`
-                                },
-                                    tab.icon,
-                                    e("span", { className: "hidden sm:inline" }, tab.label)
-                                )
-                            )
-                        )
-                    )
-                )
+            return (
+                <nav className="bg-white shadow-md sticky top-0 z-50">
+                    <div className="max-w-7xl mx-auto px-4">
+                        <div className="flex justify-between items-center h-16">
+                            <div className="flex items-center space-x-2 font-bold text-xl text-teal-700 flex-shrink-0 mr-4">
+                                <Icons.Shield size={24} />
+                                <span className="hidden lg:inline">Toksik Stres & İyileşme</span>
+                            </div>
+                            <div className="flex space-x-1 overflow-x-auto no-scrollbar pb-1">
+                                {tabs.map((tab) => (
+                                    <button
+                                        key={tab.id}
+                                        onClick={() => setActiveTab(tab.id)}
+                                        className={`flex items-center space-x-1 px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200 whitespace-nowrap ${
+                                            activeTab === tab.id ? 'bg-teal-100 text-teal-800' : 'text-gray-600 hover:bg-gray-100'
+                                        }`}
+                                    >
+                                        {tab.icon}
+                                        <span className="hidden sm:inline">{tab.label}</span>
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                </nav>
             );
         };
+        
+        // --- HOME SECTION ---
+        const HomeSection = ({ setActiveTab }) => (
+            <div className="flex flex-col items-center justify-center min-h-[80vh] text-center px-4 bg-gradient-to-b from-teal-50 to-white">
+                <div className="max-w-4xl pt-12 pb-8">
+                    <h1 className="text-4xl sm:text-5xl font-extrabold text-slate-800 mb-4 leading-tight">
+                        Çocukluk Travmalarının Mirası:<br/> <span className="text-teal-600">Toksik Stresten İyileşmeye</span>
+                    </h1>
+                    <h2 className="text-2xl sm:text-3xl font-semibold text-slate-700 mb-6">
+                        Çocuklukta Yaşadığın Stres Hâlâ Bedeninde mi?
+                    </h2>
+                    <p className="text-lg sm:text-xl text-slate-600 mb-10 leading-relaxed max-w-3xl mx-auto">
+                        Çocukluk döneminde yaşadığın olumsuz deneyimler, sadece anılarda değil; bedeninde, sinir sisteminde ve sağlık durumunda hâlâ sessizce etkisini sürdürüyor olabilir. 
+                        Bu uygulama sana iyileşme yolunda rehberlik edecek bilimsel araçlar ve pratikler sunuyor.
+                    </p>
 
-        // HOME SECTION
-        const HomeSection = ({ setActiveTab }) => 
-            e("div", { className: "flex flex-col items-center justify-center min-h-screen text-center px-4 bg-gradient-to-b from-teal-50 to-white" },
-                e("div", { className: "max-w-4xl pt-12 pb-8" },
-                    e("h1", { className: "text-5xl font-extrabold text-slate-800 mb-4" },
-                        e("span", null, "Çocukluk Travmalarının Mirası: "),
-                        e("br", null),
-                        e("span", { className: "text-teal-600" }, "Toksik Stresten İyileşmeye")
-                    ),
-                    e("h2", { className: "text-3xl font-semibold text-slate-700 mb-6" }, "Çocuklukta Yaşadığın Stres Hâlâ Bedeninde mi?"),
-                    e("p", { className: "text-xl text-slate-600 mb-10 max-w-3xl mx-auto leading-relaxed" },
-                        "Çocukluk döneminde yaşadığın olumsuz deneyimler, sadece anılarda değil; bedeninde, sinir sisteminde ve sağlık durumunda hâlâ sessizce etkisini sürdürüyor olabilir. Bu uygulama sana iyileşme yolunda rehberlik edecek bilimsel araçlar ve pratikler sunuyor."
-                    ),
-                    e("div", { className: "grid grid-cols-1 md:grid-cols-2 gap-6 mb-12" },
-                        e("button", { onClick: () => setActiveTab('ace-test'), className: "bg-white p-6 rounded-xl shadow-md border border-teal-100 hover:shadow-lg transition-shadow text-left" },
-                            e("div", { className: "w-12 h-12 bg-teal-100 rounded-full flex items-center justify-center text-teal-600 mb-4" }, e(Icons.Activity, { size: 24 })),
-                            e("h3", { className: "font-bold text-lg mb-2" }, "ACE Testi"),
-                            e("p", { className: "text-slate-500 text-sm" }, "Olumsuz Çocukluk Deneyimleri skorunuzu hesaplayın.")
-                        ),
-                        e("button", { onClick: () => setActiveTab('healing'), className: "bg-white p-6 rounded-xl shadow-md border border-teal-100 hover:shadow-lg transition-shadow text-left" },
-                            e("div", { className: "w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center text-orange-600 mb-4" }, e(Icons.Heart, { size: 24 })),
-                            e("h3", { className: "font-bold text-lg mb-2" }, "İyileşme Araçları"),
-                            e("p", { className: "text-slate-500 text-sm" }, "İyileşme stratejileri ve interaktif egzersizler.")
-                        )
-                    ),
-                    e("button", { onClick: () => setActiveTab('ace-test'), className: "bg-teal-600 hover:bg-teal-700 text-white text-lg font-semibold py-4 px-8 rounded-full transition-all" },
-                        "Başlayın"
-                    )
-                )
-            );
-
-        // ACE TEST
-        const AceTestSection = () => {
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12 text-left">
+                        <button onClick={() => setActiveTab('ace-test')} className="bg-white p-6 rounded-xl shadow-sm border border-teal-100 hover:shadow-md transition-shadow text-left">
+                            <div className="w-12 h-12 bg-teal-100 rounded-full flex items-center justify-center text-teal-600 mb-4"><Icons.Activity size={24} /></div>
+                            <h3 className="font-bold text-lg mb-2">ACE Testi</h3>
+                            <p className="text-slate-500 text-sm">Olumsuz Çocukluk Deneyimleri skorunuzu hesaplayın ve risk faktörlerini anlayın.</p>
+                        </button>
+                        <button onClick={() => setActiveTab('science')} className="bg-white p-6 rounded-xl shadow-sm border border-teal-100 hover:shadow-md transition-shadow text-left">
+                            <div className="w-12 h-12 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-600 mb-4"><Icons.Brain size={24} /></div>
+                            <h3 className="font-bold text-lg mb-2">Bilim & Biyoloji</h3>
+                            <p className="text-slate-500 text-sm">Stresin biyolojisini, epigenetik aktarımı ve beden kayıtlarını öğrenin.</p>
+                        </button>
+                        <button onClick={() => setActiveTab('healing')} className="bg-white p-6 rounded-xl shadow-sm border border-teal-100 hover:shadow-md transition-shadow text-left">
+                            <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center text-orange-600 mb-4"><Icons.Heart size={24} /></div>
+                            <h3 className="font-bold text-lg mb-2">İyileşme Yolları</h3>
+                            <p className="text-slate-500 text-sm">Topraklanma egzersizleri, koruyucu faktörler ve iyileşme stratejilerini keşfedin.</p>
+                        </button>
+                    </div>
+                    <button onClick={() => setActiveTab('ace-test')} className="group bg-teal-600 hover:bg-teal-700 text-white text-lg font-semibold py-4 px-8 rounded-full transition-all shadow-lg">
+                        Başlayın
+                    </button>
+                </div>
+            </div>
+        );
+        
+        // --- ACE TEST ---
+        const AceTestSection = ({ onGoToHealing }) => {
             const [answers, setAnswers] = useState({});
             const [showResult, setShowResult] = useState(false);
             const questions = [
@@ -158,132 +168,208 @@
                 { id: 4, text: "Ailenizde kimsenin sizi sevmediğini veya sizin önemli olmadığınızı hissettiniz mi?" },
                 { id: 5, text: "Yeterince yiyeceğiniz, temiz kıyafetiniz olmadığı veya sizi koruyacak kimsenin olmadığı durumlar sık yaşandı mı?" },
                 { id: 6, text: "Anne ve babanız ayrıldı mı veya boşandı mı?" },
-                { id: 7, text: "Anneniz veya üvey anneniz şiddet gördü mü?" },
+                { id: 7, text: "Anneniz veya üvey anneniz şiddet gördü mü (itildi, tokatlandı, vuruldu)?" },
                 { id: 8, text: "Evde alkolik veya uyuşturucu sorunu olan biriyle yaşadınız mı?" },
-                { id: 9, text: "Ev halkından biri depresyonda mıydı veya intihara teşebbüs etti mi?" },
+                { id: 9, text: "Ev halkından biri depresyonda mıydı, akıl hastası mıydı veya intihara teşebbüs etti mi?" },
                 { id: 10, text: "Ev halkından biri hapse girdi mi?" }
             ];
-
+            const handleToggle = (id) => setAnswers(prev => ({ ...prev, [id]: !prev[id] }));
             const score = Object.values(answers).filter(Boolean).length;
 
-            return e("div", { className: "max-w-4xl mx-auto py-10 px-4" },
-                e("div", { className: "bg-white rounded-2xl shadow-xl overflow-hidden" },
-                    e("div", { className: "bg-teal-600 p-8 text-white" },
-                        e("h2", { className: "text-3xl font-bold mb-2" }, "ACE Testi"),
-                        e("p", { className: "opacity-90" }, "Cevaplarınız yalnızca cihazınızda saklanır.")
-                    ),
-                    !showResult ? 
-                        e("div", { className: "p-8" },
-                            e("div", { className: "space-y-4" },
-                                questions.map((q) =>
-                                    e("label", { key: q.id, className: "flex items-start p-4 border border-gray-200 rounded-lg hover:bg-teal-50 cursor-pointer" },
-                                        e("input", {
-                                            type: "checkbox",
-                                            checked: !!answers[q.id],
-                                            onChange: () => setAnswers(prev => ({ ...prev, [q.id]: !prev[q.id] })),
-                                            className: "w-5 h-5 mt-1 text-teal-600"
-                                        }),
-                                        e("span", { className: "ml-3 text-gray-700" }, q.text)
-                                    )
-                                )
-                            ),
-                            e("button", { onClick: () => setShowResult(true), className: "w-full mt-8 bg-teal-600 hover:bg-teal-700 text-white font-bold py-3 px-8 rounded-lg" },
-                                "Sonucu Göster"
-                            )
-                        )
-                    :
-                        e("div", { className: "p-8 text-center" },
-                            e("div", { className: "inline-block p-10 rounded-full bg-teal-50 border-4 border-teal-100 mb-4" },
-                                e("span", { className: "text-6xl font-extrabold text-teal-600" }, score)
-                            ),
-                            e("h3", { className: "text-2xl font-bold mb-4" }, "ACE Skorunuz"),
-                            e("p", { className: `p-6 rounded-lg border text-left mb-8 ${score === 0 ? 'bg-green-50 text-green-700' : score <= 3 ? 'bg-yellow-50 text-yellow-700' : 'bg-red-50 text-red-700'}` },
-                                score === 0 ? "Harika! Toksik stres yükünüz düşük görünüyor." :
-                                score <= 3 ? "Orta seviyede bir risk taşıyor olabilirsiniz. İyileşme araçlarını keşfetmeyi deneyin." :
-                                "Yüksek risk grubu. Profesyonel destek almanız önerilir."
-                            ),
-                            e("div", { className: "flex gap-4 justify-center" },
-                                e("button", { onClick: () => { setShowResult(false); setAnswers({}); }, className: "px-6 py-3 border border-gray-300 rounded-lg hover:bg-gray-50" },
-                                    "Tekrarla"
-                                )
-                            )
-                        )
-                )
+            let scoreExplanation = "";
+            let explanationColor = "";
+            if(score === 0) {
+                scoreExplanation = "Harika! Girdiğiniz cevaplara göre toksik stres yükünüz oldukça düşük görünüyor.";
+                explanationColor = "text-green-700 bg-green-50 border-green-200";
+            } else if(score >= 1 && score <= 3) {
+                scoreExplanation = "Skorunuz çocukluk döneminde bazı zorlayıcı deneyimler yaşadığınızı gösteriyor. Orta seviye bir risk taşıyor olabilirsiniz.";
+                explanationColor = "text-yellow-800 bg-yellow-50 border-yellow-200";
+            } else {
+                scoreExplanation = "Skorunuz toksik stres açısından yüksek risk grubunda olduğunuzu gösteriyor. Yaşadığınız bu erken dönem stresörleri yetişkinlikteki fiziksel ve ruh sağlığını etkileyebilir.";
+                explanationColor = "text-red-800 bg-red-50 border-red-200";
+            }
+
+            return (
+                <div className="max-w-4xl mx-auto py-10 px-4">
+                    <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
+                        <div className="bg-teal-600 p-8 text-white">
+                            <h2 className="text-3xl font-bold mb-2">ACE Testi (Olumsuz Çocukluk Deneyimleri)</h2>
+                            <p className="opacity-90">Verdiğiniz cevaplar dışarı aktarılmaz, sadece cihazınızda değerlendirilir.</p>
+                        </div>
+                        {!showResult ? (
+                            <div className="p-8">
+                                <div className="space-y-4">
+                                    {questions.map((q) => (
+                                        <label key={q.id} className="flex items-start p-4 border border-gray-200 rounded-lg hover:bg-teal-50 cursor-pointer transition-colors">
+                                            <div className="flex items-center h-6"><input type="checkbox" checked={!!answers[q.id]} onChange={() => handleToggle(q.id)} className="w-5 h-5 text-teal-600" /></div>
+                                            <span className="ml-3 text-gray-700 font-medium">{q.text}</span>
+                                        </label>
+                                    ))}
+                                </div>
+                                <div className="mt-8 flex justify-end"><button onClick={() => setShowResult(true)} className="bg-teal-600 hover:bg-teal-700 text-white font-bold py-3 px-8 rounded-lg">Sonucu Göster</button></div>
+                            </div>
+                        ) : (
+                            <div className="p-8 text-center">
+                                <div className="inline-block p-10 rounded-full bg-teal-50 border-4 border-teal-100 mb-4"><span className="text-6xl font-extrabold text-teal-600">{score}</span></div>
+                                <h3 className="text-2xl font-bold mb-4">ACE Skorunuz</h3>
+                                
+                                <div className={`p-6 rounded-lg border text-left mb-8 max-w-2xl mx-auto ${explanationColor}`}>
+                                    <p className="font-medium">{scoreExplanation}</p>
+                                </div>
+
+                                <div className="flex flex-col sm:flex-row justify-center gap-4">
+                                    <button onClick={() => { setShowResult(false); setAnswers({}); }} className="px-6 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 flex items-center justify-center gap-2 font-bold">
+                                        Tekrarla
+                                    </button>
+                                    <button onClick={() => setActiveTab('healing')} className="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg flex items-center justify-center gap-2 font-bold">
+                                        İyileşme Araçlarını Keşfet
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </div>
             );
         };
 
-        // HEALING SECTION
+        // --- SCIENCE SECTION ---
+        const ScienceSection = () => {
+            const [activeConcept, setActiveConcept] = useState('bear');
+
+            return (
+                <div className="max-w-6xl mx-auto py-10 px-4">
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                        <div className="lg:col-span-4 space-y-4">
+                            <div className="bg-white rounded-xl shadow-md p-6 border border-gray-100">
+                                <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center">
+                                    <span className="mr-2 text-teal-600"><Icons.Brain size={24} /></span>
+                                    Biyolojik Mekanizma
+                                </h3>
+                                <div className="space-y-2">
+                                    <button onClick={() => setActiveConcept('bear')} className={`w-full text-left p-3 rounded-lg transition-all ${activeConcept === 'bear' ? 'bg-teal-100 text-teal-900 font-bold' : 'hover:bg-gray-100'}`}>Ormanda Bir Ayı</button>
+                                    <button onClick={() => setActiveConcept('toxic')} className={`w-full text-left p-3 rounded-lg transition-all ${activeConcept === 'toxic' ? 'bg-teal-100 text-teal-900 font-bold' : 'hover:bg-gray-100'}`}>Toksik Stres</button>
+                                    <button onClick={() => setActiveConcept('body')} className={`w-full text-left p-3 rounded-lg transition-all ${activeConcept === 'body' ? 'bg-teal-100 text-teal-900 font-bold' : 'hover:bg-gray-100'}`}>Beden Skoru Tutar</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="lg:col-span-8">
+                            <div className="bg-white rounded-xl shadow-lg overflow-hidden min-h-[500px] p-8">
+                                {activeConcept === 'bear' && (
+                                    <div className="animate-fade-in">
+                                        <h2 className="text-3xl font-bold text-gray-800 mb-4">Normal Stres Tepkisi: Ormanda Bir Ayı</h2>
+                                        <p className="text-gray-600 mb-4">
+                                            Ormanda tehlikeli bir ayı gördüğünde vücudunuz otomatik olarak tepki verir. Amigdala (korku merkezi) alarm verir, kalp atışınız hızlanır, 
+                                            cortizol ve adrenalin salgılanır. Bu "dövüş-uçuş" tepkisi hayat kurtarıcıdır. Tehlike geçince vücudunuz normalleşir.
+                                        </p>
+                                    </div>
+                                )}
+
+                                {activeConcept === 'toxic' && (
+                                    <div className="animate-fade-in">
+                                        <h2 className="text-3xl font-bold text-gray-800 mb-4">Toksik Stres: Ayı Evinizin İçinde Yaşarsa?</h2>
+                                        <p className="text-gray-600 mb-4">
+                                            Eğer tehlike (şiddet, ihmal, açlık) sürekli ve öngörülemez ise, stres sistemi aşırı aktif kalır. Beyin, "ayının" her an gelecek olduğunu düşünerek 
+                                            sürekli uyarıda kalır. Bu, amigdalanı aşırı geliştirir, prefrontal korteksi zayıflatır ve hiperaktif tepkilere sebep olur.
+                                        </p>
+                                    </div>
+                                )}
+
+                                {activeConcept === 'body' && (
+                                    <div className="animate-fade-in">
+                                        <h2 className="text-3xl font-bold text-gray-800 mb-4">Beden Skoru Tutar</h2>
+                                        <p className="text-gray-600 mb-4">
+                                            Sürekli yüksek kortizol ve adrenalin seviyeleri sadece beyni değil, tüm vücudu yıpratır:
+                                        </p>
+                                        <ul className="space-y-2 text-gray-600">
+                                            <li>• Bağışıklık sistemi zayıflar</li>
+                                            <li>• Kalp hastalıkları riski artar</li>
+                                            <li>• Enflamasyon kronikleşir</li>
+                                            <li>• Metabolizma bozulur</li>
+                                            <li>• Uyku düzeni bozulur</li>
+                                        </ul>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        // --- HEALING SECTION ---
         const HealingSection = () => {
-            const [sleepState, setSleepState] = useState({ dark: false });
+            const [activeStrategy, setActiveStrategy] = useState('sleep');
+            const [sleepDark, setSleepDark] = useState(false);
 
-            return e("div", { className: "max-w-6xl mx-auto py-10 px-4" },
-                e("h2", { className: "text-3xl font-bold text-gray-800 mb-8" }, "İyileşme Reçetesi"),
-                e("div", { className: "grid md:grid-cols-2 gap-8" },
-                    e("div", { className: "space-y-4" },
-                        e("h3", { className: "text-xl font-bold text-indigo-900" }, "Uyku"),
-                        e("p", { className: "text-gray-600 mb-4" }, "Kaliteli uyku beyni onarmak için kritiktir."),
-                        e("button", { onClick: () => setSleepState(prev => ({ ...prev, dark: !prev.dark })), className: "w-full p-4 rounded-xl flex items-center justify-between bg-indigo-100 hover:bg-indigo-200" },
-                            e("span", { className: "flex items-center" }, e(Icons.Moon, { size: 20, className: "mr-3" }), "Karanlık Oda"),
-                            sleepState.dark && e(Icons.CheckCircle, { size: 20 })
-                        )
-                    ),
-                    e("div", { className: "bg-slate-900 rounded-lg p-6 flex items-center justify-center" },
-                        e(SleepVisual, { isDark: sleepState.dark })
-                    )
-                )
+            return (
+                <div className="max-w-6xl mx-auto py-10 px-4">
+                    <h2 className="text-3xl font-bold text-gray-800 mb-8">İyileşme Reçetesi</h2>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div>
+                            <h3 className="text-xl font-bold text-indigo-900 mb-4">Uyku Hijyeni</h3>
+                            <p className="text-gray-600 mb-4">Kaliteli uyku, beyin için "detoks" saatıdir. Toksik stres altında uyku bozulur.</p>
+                            <button onClick={() => setSleepDark(!sleepDark)} className="w-full p-4 rounded-lg flex items-center justify-between bg-indigo-100 hover:bg-indigo-200 mb-4">
+                                <span className="flex items-center"><Icons.Moon size={20} className="mr-3"/> Karanlık Oda</span>
+                                {sleepDark && <Icons.CheckCircle size={20} className="text-indigo-600" />}
+                            </button>
+                            <div className="bg-gray-100 rounded-lg p-4 text-center">
+                                <div className="text-4xl">{sleepDark ? '🌙' : '☀️'}</div>
+                            </div>
+                        </div>
+                        <div>
+                            <h3 className="text-xl font-bold text-green-900 mb-4">İyileşme Bilgisi</h3>
+                            <p className="text-gray-600 mb-4">
+                                <strong>İyi haber:</strong> Beyin neuroplastiktir! Yetişkinlikte de iyileşme mümkündür.
+                            </p>
+                            <p className="text-gray-600 mb-4">
+                                Düzenli uyku, egzersiz, beslenme ve güvenli ilişkiler stres sistemini yeniden programlayabilir.
+                            </p>
+                            <p className="text-gray-600">
+                                Sadece 1-2 güvenli yetişkin ilişkisi bile toksik stresin riskini dramatik ölçüde azaltır.
+                            </p>
+                        </div>
+                    </div>
+                </div>
             );
         };
 
-        // SCIENCE SECTION
-        const ScienceSection = () => 
-            e("div", { className: "max-w-4xl mx-auto py-10 px-4" },
-                e("h2", { className: "text-3xl font-bold mb-6" }, "Toksik Stres Nedir?"),
-                e("div", { className: "bg-white p-8 rounded-lg shadow-lg space-y-4" },
-                    e("p", { className: "text-lg text-gray-700" },
-                        "Toksik stres, uzun süreli ve yoğun stres durumudur. Çocuklukta yaşanan şiddet, ihmal, açlık veya duygusal yoksunluk beynin mimarisini değiştirir."
-                    ),
-                    e("p", { className: "text-lg text-gray-700" },
-                        "Bu, amigdala'yı (korku merkezini) aşırı aktif hale getirirken, prefrontal korteksi (karar merkezini) zayıflatır."
-                    ),
-                    e("p", { className: "text-lg text-gray-700" },
-                        "İyi haber: İyileşme pratikleri bu zararı onarabilir."
-                    )
-                )
-            );
+        // --- CONTACT SECTION ---
+        const ContactSection = () => (
+            <div className="max-w-4xl mx-auto py-10 px-4">
+                <div className="bg-white rounded-xl shadow-lg p-8 text-center">
+                    <h2 className="text-3xl font-bold text-gray-800 mb-4">İletişim</h2>
+                    <p className="text-lg text-gray-600 mb-6">
+                        Sorularınız veya önerileriniz için bizimle iletişime geçin.
+                    </p>
+                    <a href="mailto:support@example.com" className="inline-block bg-teal-600 text-white px-8 py-3 rounded-lg hover:bg-teal-700 transition-colors">
+                        Email Gönder
+                    </a>
+                </div>
+            </div>
+        );
 
-        // CONTACT SECTION
-        const ContactSection = () => 
-            e("div", { className: "max-w-4xl mx-auto py-10 px-4" },
-                e("h2", { className: "text-3xl font-bold text-center mb-8" }, "İletişim"),
-                e("div", { className: "bg-white p-8 rounded-lg shadow-lg text-center" },
-                    e("p", { className: "text-lg text-gray-700 mb-4" },
-                        "Sorularınız veya önerileriniz için bizimle iletişime geçin."
-                    ),
-                    e("a", { href: "mailto:iletisim@example.com", className: "inline-block bg-teal-600 text-white px-8 py-3 rounded-lg hover:bg-teal-700 transition-colors" },
-                        "Email Gönder"
-                    )
-                )
-            );
-
-        // MAIN APP
+        // --- MAIN APP ---
         const App = () => {
             const [activeTab, setActiveTab] = useState('home');
 
-            return e(React.Fragment, null,
-                e(Navigation, { activeTab, setActiveTab }),
-                e("main", null,
-                    activeTab === 'home' && e(HomeSection, { setActiveTab }),
-                    activeTab === 'ace-test' && e(AceTestSection),
-                    activeTab === 'science' && e(ScienceSection),
-                    activeTab === 'healing' && e(HealingSection),
-                    activeTab === 'contact' && e(ContactSection)
-                )
+            return (
+                <>
+                    <Navigation activeTab={activeTab} setActiveTab={setActiveTab} />
+                    <main>
+                        {activeTab === 'home' && <HomeSection setActiveTab={setActiveTab} />}
+                        {activeTab === 'ace-test' && <AceTestSection onGoToHealing={() => setActiveTab('healing')} />}
+                        {activeTab === 'science' && <ScienceSection />}
+                        {activeTab === 'healing' && <HealingSection />}
+                        {activeTab === 'contact' && <ContactSection />}
+                    </main>
+                </>
             );
         };
 
         // RENDER
         const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(e(App));
+        root.render(<App />);
     </script>
 </body>
 </html>
