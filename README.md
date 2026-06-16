@@ -20,7 +20,7 @@ Uygulama herhangi bir harici veritabanı veya sunucu kullanmaz. Girilen tüm gü
 * HTML5 / CSS3
 * React 18 (Babel Standalone)
 * Tailwind CSS (CDN)
-* SVG Tabanlı Özel Animasyonlar ve Grafikler
+* SVG Tabanlı Özel Animasyonlar ve Grafikler.
 
 ## 📚 Kaynakça
 
